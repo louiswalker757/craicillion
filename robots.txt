@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://craicillion.ie/sitemap.xml

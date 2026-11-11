@@ -1,0 +1,18 @@
+{
+  "name": "Craicillion: Daily Irish Word Game",
+  "short_name": "Craicillion",
+  "description": "A free daily Irish word game. The rarer your answer, the deeper you dive.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b4a6e",
+  "theme_color": "#0b4a6e",
+  "lang": "en-IE",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
