@@ -338,6 +338,25 @@ form.answer{display:flex;gap:8px}
 .res-squares .tile:nth-child(5){animation-delay:.32s}.res-squares .tile:nth-child(6){animation-delay:.4s}.res-squares .tile:nth-child(7){animation-delay:.48s}
 @keyframes tilepop{from{transform:scale(.3) rotate(-12deg);opacity:0}}
 .res-depth{background:linear-gradient(180deg,#fff,#a6f7e4);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* celebrations */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:8;overflow:hidden}
+.fxp{position:absolute;border-radius:50%;border:2px solid;will-change:transform,opacity}
+.fx-dim{position:absolute;inset:0;background:rgba(2,10,20,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.fx-shark{position:absolute;left:0;width:64px;height:64px;color:#d9c2ff;filter:drop-shadow(0 0 12px #b585ff) drop-shadow(0 0 22px rgba(181,133,255,.6))}
+.fx-shark .ti{width:100%;height:100%}
+.fx-flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,rgba(255,92,108,.55),rgba(244,201,93,.25) 35%,transparent 70%)}
+.fx-hero{position:absolute;left:50%;top:42%;text-align:center;width:min(92vw,420px)}
+.fx-trident{width:120px;height:120px;margin:0 auto;border-radius:30px;display:grid;place-items:center;color:#fff;
+  background:radial-gradient(circle at 35% 30%,#ff8a96,#ff5c6c 55%,#c9364a);box-shadow:0 0 0 6px rgba(255,255,255,.18),0 0 40px rgba(255,92,108,.9),0 0 90px rgba(244,201,93,.55)}
+.fx-trident .ti{width:68%;height:68%;stroke-width:2.2}
+.fx-title{margin-top:16px;font-weight:800;font-size:clamp(1.6rem,7vw,2.3rem);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.3),0 0 24px rgba(255,92,108,.9)}
+.fx-ga{font-family:'Uncial Antiqua',serif;font-size:1.4rem;color:#f4c95d;text-shadow:0 0 16px rgba(244,201,93,.8)}
+.prompt-card.zap-deadly{animation:zapDeadly 1.1s ease-out}
+.prompt-card.zap-craic{animation:zapCraic 1.6s ease-out}
+@keyframes zapDeadly{0%{box-shadow:inset 0 0 0 1.5px var(--t-deadly),0 0 0 0 rgba(181,133,255,.9)}40%{box-shadow:inset 0 0 0 1.5px var(--t-deadly),0 0 0 14px rgba(181,133,255,.35),0 0 60px rgba(181,133,255,.7)}100%{box-shadow:inset 0 0 0 1.5px var(--t-deadly),0 0 0 24px rgba(181,133,255,0),0 14px 44px -14px var(--t-deadly)}}
+@keyframes zapCraic{0%{box-shadow:inset 0 0 0 2px var(--t-craic),0 0 0 0 rgba(255,92,108,.9);transform:scale(1)}20%{transform:scale(1.025)}45%{box-shadow:inset 0 0 0 2px var(--t-craic),0 0 0 18px rgba(255,92,108,.3),0 0 90px rgba(244,201,93,.6)}100%{box-shadow:inset 0 0 0 2px var(--t-craic),0 0 0 30px rgba(255,92,108,0),0 14px 44px -14px var(--t-craic);transform:scale(1)}}
+.prompt-card.feedback .badge.craic.pop{animation:pop .45s cubic-bezier(.2,1.6,.4,1),glowc 1.6s ease-in-out .4s 2}
+@keyframes glowc{50%{box-shadow:0 0 0 4px rgba(255,92,108,.25),0 0 22px rgba(255,92,108,.8)}}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
   .bubble,.mote{display:none}
@@ -515,6 +534,7 @@ form.answer{display:flex;gap:8px}
   </div>
 </div>
 <div class="toast" id="toast" role="status"></div>
+<div id="fx" aria-hidden="true"></div>
 
 <script>
 /* =====================================================================
@@ -12470,6 +12490,8 @@ const PROMPTS = [
     { a: "Sonaí", tier: "deadly", aliases: [] },
     { a: "Katrina Carroll", tier: "deadly", aliases: ["Vintage Irish Kat"] },
     { a: "On The Upside", tier: "deadly", aliases: [] },
+    { a: "Ryan Tracey", tier: "deadly", aliases: ["Ryan Tracy", "Ryan Treacy"] },
+    { a: "Victor Lace", tier: "deadly", aliases: ["Victor Lacey"] },
     { a: "Jack Maguire", tier: "craic", aliases: [] },
     { a: "Sammy Boyle", tier: "craic", aliases: [] },
     { a: "Dundalk Credit Union", tier: "craic", aliases: [] },
@@ -13124,6 +13146,58 @@ function resolve(input, timedOut) {
   if (mode === "archive" && g.idx >= g.ids.length) { g.done = true; recordArchive(); }
   showFeedback(p, res);
 }
+/* ---------- Celebrations for rare answers ---------- */
+function burst(x, y, colors, count, spread, life) {
+  const fx = $("#fx");
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement("span"); d.className = "fxp";
+    const z = 7 + Math.random() * 14; d.style.width = d.style.height = z + "px";
+    d.style.left = x + "px"; d.style.top = y + "px";
+    const c = colors[i % colors.length]; d.style.borderColor = c; d.style.boxShadow = `0 0 10px ${c}`;
+    if (Math.random() < .45) d.style.background = c;
+    fx.appendChild(d);
+    const a = Math.random() * Math.PI * 2, dist = spread * (0.45 + Math.random() * 0.75);
+    const dx = Math.cos(a) * dist, dy = Math.sin(a) * dist;
+    d.animate([{ transform: "translate(-50%,-50%) scale(.3)", opacity: 1 },
+               { transform: `translate(calc(-50% + ${dx * .75}px), calc(-50% + ${dy * .75}px)) scale(1)`, opacity: 1, offset: .55 },
+               { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy - 60}px)) scale(.6)`, opacity: 0 }],
+              { duration: life * (0.75 + Math.random() * 0.5), easing: "cubic-bezier(.15,.7,.3,1)", fill: "forwards" }).onfinish = () => d.remove();
+  }
+}
+function celebrate(tier) {
+  const card = $("#prompt-card"), rc = card.getBoundingClientRect();
+  card.classList.remove("zap-deadly", "zap-craic"); void card.offsetWidth; card.classList.add("zap-" + tier);
+  if (reduceMotion) return;
+  const fx = $("#fx"), W = window.innerWidth, H = (window.visualViewport ? visualViewport.height : window.innerHeight);
+  if (tier === "deadly") {
+    burst(rc.left + rc.width / 2, rc.top + 50, ["#b585ff", "#d9c2ff", "#8f5cff", "#ffffff"], 30, 210, 1400);
+    setTimeout(() => burst(rc.left + rc.width * .25, rc.top + 50, ["#b585ff", "#ffffff"], 12, 140, 1100), 180);
+    const s = document.createElement("div"); s.className = "fx-shark"; s.innerHTML = icon("deadly"); fx.appendChild(s);
+    s.style.top = Math.min(H - 90, rc.bottom + 30) + "px";
+    s.animate([{ transform: "translateX(-90px) rotate(4deg)" }, { transform: `translateX(${W * .5}px) rotate(-3deg)`, offset: .5 }, { transform: `translateX(${W + 90}px) rotate(4deg)` }],
+              { duration: 1300, easing: "ease-in-out", fill: "forwards" }).onfinish = () => s.remove();
+    if (navigator.vibrate) try { navigator.vibrate(40); } catch {}
+    return;
+  }
+  // One in a Craicillion: the big one
+  const dim = document.createElement("div"); dim.className = "fx-dim"; fx.appendChild(dim);
+  dim.animate([{ opacity: 0 }, { opacity: 1, offset: .12 }, { opacity: 1, offset: .78 }, { opacity: 0 }], { duration: 2300, fill: "forwards" }).onfinish = () => dim.remove();
+  const flash = document.createElement("div"); flash.className = "fx-flash"; fx.appendChild(flash);
+  flash.animate([{ opacity: 0 }, { opacity: 1, offset: .15 }, { opacity: 0 }], { duration: 1100, fill: "forwards" }).onfinish = () => flash.remove();
+  const hero = document.createElement("div"); hero.className = "fx-hero";
+  hero.innerHTML = `<div class="fx-trident">${icon("craic")}</div><div class="fx-title">One in a Craicillion!</div><div class="fx-ga">Maith thú!</div>`;
+  fx.appendChild(hero);
+  hero.animate([{ opacity: 0, transform: "translate(-50%,-50%) scale(.2) rotate(-25deg)" },
+                { opacity: 1, transform: "translate(-50%,-50%) scale(1.12) rotate(4deg)", offset: .22 },
+                { opacity: 1, transform: "translate(-50%,-50%) scale(1) rotate(0deg)", offset: .35 },
+                { opacity: 1, transform: "translate(-50%,-50%) scale(1)", offset: .8 },
+                { opacity: 0, transform: "translate(-50%,-62%) scale(.9)" }], { duration: 2300, easing: "ease-out", fill: "forwards" }).onfinish = () => hero.remove();
+  const cx = W / 2, cy = H * .42;
+  burst(cx, cy, ["#ff5c6c", "#f4c95d", "#ffffff", "#ff8a5c", "#7ff0d8"], 46, Math.min(W, H) * .55, 1700);
+  setTimeout(() => burst(cx, cy, ["#ff5c6c", "#f4c95d", "#ffffff"], 26, Math.min(W, H) * .4, 1400), 260);
+  $("#app").animate([{ transform: "translate(0,0)" }, { transform: "translate(-5px,2px)" }, { transform: "translate(5px,-2px)" }, { transform: "translate(-3px,1px)" }, { transform: "translate(0,0)" }], { duration: 380, easing: "ease-out" });
+  if (navigator.vibrate) try { navigator.vibrate([60, 40, 140]); } catch {}
+}
 function topPicks(p, exceptA) {
   const pick = (tier) => { const xs = p.answers.filter((a) => a.tier === tier && a.a !== exceptA); return xs.length ? xs[Math.floor(Math.random() * xs.length)] : null; };
   const out = []; const c = pick("craic"); if (c) out.push(c); const d = pick("deadly"); if (d) out.push(d);
@@ -13152,6 +13226,7 @@ function showFeedback(p, r) {
     ${picks ? `<div class="fb-picks"><span class="muted">Deep cuts you could've said:</span><br>${picks}</div>` : ""}`;
   card.style.setProperty("--tc", `var(--t-${r.tier || "miss"})`);
   card.classList.add("feedback");
+  if (r.status === "ok" && (r.tier === "deadly" || r.tier === "craic")) celebrate(r.tier);
   const last = roundOver();
   $("#go").textContent = last ? "Surface" : "Next";
   const input = $("#answer"); input.value = ""; input.placeholder = last ? "Enter to see your results" : "Enter for the next one";
