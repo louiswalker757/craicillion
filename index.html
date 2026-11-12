@@ -332,12 +332,84 @@ form.answer{display:flex;gap:8px}
 /* results */
 .res-hero{overflow:hidden;flex:none}
 #results>*,#home>*{flex-shrink:0}
+#rarer{position:relative}
 .res-hero::before{content:"";position:absolute;inset:-40% -20% auto -20%;height:70%;background:radial-gradient(closest-side,rgba(127,240,216,.18),transparent);pointer-events:none}
 .res-squares .tile{animation:tilepop .5s cubic-bezier(.2,1.6,.4,1) both;box-shadow:0 6px 16px -6px rgba(0,0,0,.5)}
 .res-squares .tile:nth-child(2){animation-delay:.08s}.res-squares .tile:nth-child(3){animation-delay:.16s}.res-squares .tile:nth-child(4){animation-delay:.24s}
 .res-squares .tile:nth-child(5){animation-delay:.32s}.res-squares .tile:nth-child(6){animation-delay:.4s}.res-squares .tile:nth-child(7){animation-delay:.48s}
 @keyframes tilepop{from{transform:scale(.3) rotate(-12deg);opacity:0}}
 .res-depth{background:linear-gradient(180deg,#fff,#a6f7e4);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* ===== Which is Rarer? ===== */
+.ltm-ribbon{position:absolute;top:0;right:0;width:104px;height:104px;overflow:hidden;pointer-events:none;z-index:2}
+.ltm-ribbon span{position:absolute;top:20px;right:-36px;width:150px;transform:rotate(45deg);text-align:center;padding:4px 0;
+  font-size:.58rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#2a0e14;
+  background:linear-gradient(90deg,#ff7a86,#f4c95d);box-shadow:0 3px 10px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.5)}
+.rr-feature{appearance:none;width:100%;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:12px;align-items:center;
+  text-align:left;padding:14px 16px;cursor:pointer;overflow:hidden;color:inherit;font:inherit;border:1px solid rgba(244,201,93,.45);
+  background:linear-gradient(135deg,rgba(255,92,108,.22),rgba(244,201,93,.12) 55%,rgba(255,255,255,.04)),var(--glass)}
+.rr-feature:active{transform:scale(.98)}
+.rr-feature:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.rr-f-icons{grid-row:1 / span 2;display:flex;align-items:center;gap:4px}
+.rr-f-icons .tile{width:30px;height:30px;border-radius:8px}
+.rr-f-vs{font-size:.62rem;font-weight:800;color:var(--muted);text-transform:uppercase}
+.rr-f-text b{display:block;font-size:1.05rem}
+.rr-f-text small{display:block;color:var(--muted);font-size:.8rem;line-height:1.3;padding-right:52px}
+.rr-f-best{grid-column:2;font-size:.75rem;font-weight:700;color:var(--gold);margin-top:4px}
+.rr-f-best:empty{display:none}
+#rarer{gap:10px}
+.rr-head{text-align:center;line-height:1.15}
+.rr-head b{display:block;font-size:1rem}
+.rr-head small{font-size:.7rem;color:var(--muted)}
+.rr-streak{display:inline-block;font-size:1.25rem}
+.rr-streak.bump{animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+.rr-cat{padding:16px 18px 14px;flex:none;overflow:hidden}
+.rr-prompt{font-size:clamp(1.15rem,5vw,1.5rem);font-weight:700;line-height:1.2;margin:0;padding-right:46px;text-wrap:balance}
+.rr-pair{flex:1;min-height:0;display:flex;flex-direction:column;gap:0;justify-content:center;max-height:360px}
+.rr-card{appearance:none;position:relative;flex:1;min-height:92px;max-height:150px;border-radius:20px;border:2px solid rgba(255,255,255,.18);cursor:pointer;
+  color:var(--ink);font:inherit;padding:14px 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;
+  background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.04)),rgba(3,22,38,.5);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 14px 30px -16px rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  transition:transform .15s ease,border-color .25s,background .35s,box-shadow .35s;touch-action:manipulation}
+.rr-card:hover{border-color:rgba(127,240,216,.6)}
+.rr-card:active{transform:scale(.97)}
+.rr-card:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.rr-card[disabled]{cursor:default}
+.rr-name{font-size:clamp(1.25rem,5.6vw,1.7rem);font-weight:800;line-height:1.15;overflow-wrap:anywhere}
+.rr-key{position:absolute;left:12px;top:10px;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:.72rem;font-weight:800;
+  color:var(--muted);border:1px solid var(--line)}
+@media (hover:none){.rr-key{display:none}}
+.rr-reveal{min-height:0;display:flex;align-items:center;gap:8px;opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s}
+.rr-card.revealed .rr-reveal{opacity:1;transform:none}
+.rr-reveal .pts{font-weight:800;font-variant-numeric:tabular-nums}
+.rr-card.revealed{border-color:var(--tc);background:linear-gradient(180deg,color-mix(in srgb,var(--tc) 28%,transparent),color-mix(in srgb,var(--tc) 10%,transparent)),rgba(3,22,38,.55)}
+.rr-card.right{box-shadow:0 0 0 3px var(--tc),0 0 34px -4px var(--tc);animation:rrRight .5s cubic-bezier(.2,1.6,.4,1)}
+.rr-card.wrong{animation:rrWrong .45s}
+.rr-card.dim{opacity:.72}
+@keyframes rrRight{40%{transform:scale(1.04)}}
+@keyframes rrWrong{20%{transform:translateX(-9px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+.rr-card .tick{position:absolute;right:12px;top:10px;font-size:1.3rem}
+.rr-vs{align-self:center;margin:-14px 0;z-index:2;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:.85rem;letter-spacing:.04em;
+  color:#2a0e14;background:linear-gradient(180deg,#ffd27a,#f4a93d);box-shadow:0 0 0 4px rgba(3,22,38,.65),0 6px 18px rgba(0,0,0,.4)}
+.rr-msg{min-height:1.6em;text-align:center;font-weight:700;font-size:1.05rem}
+.rr-msg .ga-line{font-size:1.2rem}
+.rr-in{animation:rrIn .35s cubic-bezier(.2,.9,.3,1)}
+@keyframes rrIn{from{opacity:0;transform:translateY(14px) scale(.98)}}
+.rr-over{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(1,8,16,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.rr-over[hidden]{display:none}
+.rr-over-card{width:100%;max-width:400px;padding:22px 18px 18px;text-align:center;overflow:hidden;animation:slideup .35s cubic-bezier(.2,.9,.3,1)}
+.rr-over-streak{margin:8px 0 2px}
+.rr-over-streak span{display:block;font-size:4.2rem;font-weight:900;line-height:1;background:linear-gradient(180deg,#fff,#ffd27a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rr-over-streak small{color:var(--muted);font-weight:600}
+.rr-newbest{display:inline-block;margin-top:8px;padding:5px 12px;border-radius:999px;font-weight:800;color:#2a0e14;background:linear-gradient(90deg,#ffd27a,#f4a93d);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.rr-newbest[hidden]{display:none}
+.rr-over-best{margin-top:6px;color:var(--muted);font-size:.9rem}
+.rr-trail{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin:12px 0 4px}
+.rr-trail .tile{width:22px;height:22px;border-radius:6px}
+.rr-lost{font-size:.9rem;line-height:1.45;margin:10px 0 14px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.2);border:1px solid var(--line)}
+.rr-lost b{color:var(--ink)}
+.rr-over-actions{display:flex;flex-direction:column;gap:10px}
+.rr-over-actions .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rr-lock{padding:22px 18px;text-align:center}
 /* celebrations */
 #fx{position:fixed;inset:0;pointer-events:none;z-index:8;overflow:hidden}
 .fxp{position:absolute;border-radius:50%;border:2px solid;will-change:transform,opacity}
@@ -412,6 +484,12 @@ form.answer{display:flex;gap:8px}
     </div>
     <div class="home-actions">
       <button class="btn btn-primary" id="start-btn"><span class="ga">Tosaigh</span><small>Start the Dive</small></button>
+      <button class="rr-feature card" id="rarer-btn" aria-label="Which is Rarer? Limited time mode">
+        <span class="ltm-ribbon" aria-hidden="true"><span>Limited time</span></span>
+        <span class="rr-f-icons" aria-hidden="true"><span class="rr-f-a"></span><span class="rr-f-vs">vs</span><span class="rr-f-b"></span></span>
+        <span class="rr-f-text"><b>Which is Rarer?</b><small>Two answers. Tap the rarer one. How long can you last?</small></span>
+        <span class="rr-f-best" id="home-rr-best"></span>
+      </button>
       <div class="home-row">
         <button class="btn btn-ghost" id="howto-btn" aria-label="How to play">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .8c0 1.8-2.5 2.2-2.5 4"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/></svg>How to Play</button>
@@ -464,6 +542,50 @@ form.answer{display:flex;gap:8px}
     </div>
   </section>
 
+  <!-- ================= WHICH IS RARER? ================= -->
+  <section id="rarer" class="screen" aria-label="Which is Rarer?">
+    <div class="g-head">
+      <button class="icon-btn" id="rr-quit" aria-label="Back to home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="rr-head"><b>Which is Rarer?</b><small id="rr-pool"></small></div>
+      <div class="g-depth"><span class="rr-streak" id="rr-streak">🔥 0</span><small id="rr-best">Best 0</small></div>
+    </div>
+    <div class="air" id="rr-air" role="timer" aria-label="Time left">
+      <span class="air-label">Aer</span>
+      <div class="air-track"><div class="air-fill" id="rr-fill"></div></div>
+      <span class="air-secs" id="rr-secs">10</span>
+    </div>
+    <div class="card rr-cat">
+      <span class="ltm-ribbon" aria-hidden="true"><span>Limited time</span></span>
+      <div class="kicker" id="rr-kicker">Round 1</div>
+      <p class="rr-prompt" id="rr-prompt">…</p>
+      <div class="prompt-sub">Tap the answer <b>fewer</b> people would say.</div>
+    </div>
+    <div class="rr-pair" id="rr-pair">
+      <button class="rr-card" id="rr-a" data-i="0"><span class="rr-key">1</span><span class="rr-name"></span><span class="rr-reveal"></span></button>
+      <div class="rr-vs" aria-hidden="true">VS</div>
+      <button class="rr-card" id="rr-b" data-i="1"><span class="rr-key">2</span><span class="rr-name"></span><span class="rr-reveal"></span></button>
+    </div>
+    <div class="rr-msg" id="rr-msg" aria-live="polite"></div>
+    <div class="rr-over" id="rr-over" hidden>
+      <div class="card rr-over-card">
+        <span class="ltm-ribbon" aria-hidden="true"><span>Limited time</span></span>
+        <div class="kicker">Which is Rarer?</div>
+        <div class="rr-over-streak"><span id="rr-final">0</span><small>in a row</small></div>
+        <div class="rr-newbest" id="rr-newbest" hidden>🏆 New best!</div>
+        <div class="rr-over-best" id="rr-over-best"></div>
+        <div class="rr-trail" id="rr-trail" aria-hidden="true"></div>
+        <div class="rr-lost" id="rr-lost"></div>
+        <div class="rr-over-actions">
+          <button class="btn btn-primary" id="rr-again"><span class="ga">Arís!</span><small>Play again</small></button>
+          <div class="row">
+            <button class="btn btn-ghost" id="rr-share">Share</button>
+            <button class="btn btn-ghost" id="rr-home">Home</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ================= RESULTS ================= -->
   <section id="results" class="screen scroll" aria-labelledby="res-title">
     <div class="card res-hero">
@@ -508,7 +630,7 @@ form.answer{display:flex;gap:8px}
     <table class="tier-table" id="tier-table"></table>
     <h3 style="margin:16px 0 4px;font-size:1rem">Landmarks on the way down</h3>
     <div class="landmarks" id="lm-table"></div>
-    <p class="muted" style="font-size:.88rem">One scored dive a day; it rolls over at midnight, Irish time. <b>Infinite</b> is endless practice: dive 7 prompts, surface, then keep going as long as you like. It doesn't touch your stats. Missed a day? Play any past dive from the <b>Archive</b>.</p>
+    <p class="muted" style="font-size:.88rem">One scored dive a day; it rolls over at midnight, Irish time. <b>Infinite</b> is endless practice: dive 7 prompts, surface, then keep going as long as you like. It doesn't touch your stats. Missed a day? Play any past dive from the <b>Archive</b>. And for a limited time, try <b>Which is Rarer?</b>: two answers from a past dive, tap the rarer one, and see how long a streak you can build.</p>
     <button class="btn btn-primary" data-close style="width:100%;margin-top:6px">Grand, got it</button>
   </div>
 </div>
@@ -13013,6 +13135,7 @@ function makeBubbles() {
 function show(id) {
   document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === id));
   if (id !== "game") { $("#answer").blur(); stopTimer(); phase = "idle"; }
+  if (id !== "rarer" && typeof rrStop === "function") { rrStop(); if (rr && rr.phase !== "over") rr.phase = "idle"; }
 }
 function renderHome() {
   loadDaily();
@@ -13028,7 +13151,7 @@ function renderHome() {
   if (daily.done) btn.innerHTML = `<span class="ga">Do thorthaí</span><small>See today's results</small>`;
   else if (daily.idx > 0) btn.innerHTML = `<span class="ga">Lean ar aghaidh</span><small>Resume dive · ${daily.idx + 1}/${PROMPTS_PER_DIVE}</small>`;
   else btn.innerHTML = `<span class="ga">Tosaigh</span><small>Start the Dive</small>`;
-  updateCountdowns();
+  updateCountdowns(); renderRarerFeature();
   shownDepth = 0; setSea(daily.done ? totalPts(daily) * 10 : 0);
   show("home");
 }
@@ -13335,8 +13458,7 @@ function shareText() {
   const tag = g === arch && !arch.onTheDay ? " (archive)" : "";
   return `Craicillion #${g.dive}${tag} 🦭\nDived ${m.toLocaleString("en-IE")}m — reached ${lm.name}\n${g.results.map((r) => (r.tier ? TIERS[r.tier].emoji : "❌")).join("")}\n${SHARE_URL}`;
 }
-async function share() {
-  const text = shareText();
+async function share(text = shareText()) {
   try { await navigator.clipboard.writeText(text); return toast("Copied! Paste it in the group chat 🦭"); } catch {}
   try { const ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
     document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); if (ok) return toast("Copied! Paste it in the group chat 🦭"); } catch {}
@@ -13344,6 +13466,148 @@ async function share() {
   prompt("Copy your result:", text);
 }
 let toastT; function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2200); }
+
+/* =====================================================================
+   WHICH IS RARER? (limited time mode)
+   Uses ONLY categories from Daily Dives that have already happened, so it
+   never gives away answers for today's or future dives.
+   ===================================================================== */
+const K_RARER = "craicillion:rarer";
+const RR_PRAISE = [["Maith thú!", "Well done"], ["Go hiontach!", "Brilliant"], ["Ar fheabhas!", "Excellent"], ["Sound!", ""], ["Deadly!", ""], ["Savage!", ""], ["Class!", ""], ["Beauty!", ""]];
+let rr = null;
+function rarerPool() {
+  const today = diveNumber(todayKey()), from = new Map();
+  for (let n = 1; n < today; n++) for (const id of promptIdsForDive(n)) if (!from.has(id) && promptById(id)) from.set(id, n);
+  return [...from].map(([id, n]) => ({ p: promptById(id), dive: n }));
+}
+function rarerBest() { return store.get(K_RARER, { best: 0 }).best || 0; }
+function renderRarerFeature() {
+  const tiles = (t) => tile(t);
+  $(".rr-f-a").innerHTML = tiles("sure"); $(".rr-f-b").innerHTML = tiles("deadly");
+  const b = rarerBest(); $("#home-rr-best").textContent = b ? `🔥 Your best: ${b} in a row` : "";
+}
+function startRarer() {
+  const pool = rarerPool();
+  show("rarer"); rrStop();
+  $("#rr-over").hidden = true;
+  if (!pool.length) {
+    $("#rr-prompt").textContent = "Unlocks after the first Daily Dive";
+    $("#rr-kicker").textContent = "Come back tomorrow";
+    $("#rr-pair").style.visibility = "hidden"; $("#rr-msg").textContent = ""; return;
+  }
+  $("#rr-pair").style.visibility = "";
+  rr = { pool, streak: 0, best: rarerBest(), round: 0, used: new Set(), lastPrompt: null, trail: [], phase: "idle", lost: null };
+  $("#rr-pool").textContent = `${pool.length} categories from past dives`;
+  $("#rr-best").textContent = `Best ${rr.best}`;
+  $("#rr-streak").textContent = "🔥 0";
+  setSea(0);
+  rrNext();
+}
+// Bigger rarity gaps early on, closer calls as the streak grows.
+function rrGap(streak) { return streak < 3 ? [3, 5] : streak < 7 ? [2, 4] : streak < 12 ? [1, 3] : [1, 2]; }
+function rrPick() {
+  const [gmin, gmax] = rrGap(rr.streak);
+  for (let tries = 0; tries < 60; tries++) {
+    let e = rr.pool[Math.floor(Math.random() * rr.pool.length)];
+    if (rr.pool.length > 1 && e.p.id === rr.lastPrompt && tries < 40) continue;
+    const byTier = TIER_ORDER.map((t) => e.p.answers.filter((a) => a.tier === t && !rr.used.has(e.p.id + "|" + a.a)));
+    const pairs = [];
+    for (let i = 0; i < 6; i++) for (let j = i + gmin; j <= Math.min(5, i + gmax); j++) if (byTier[i].length && byTier[j].length) pairs.push([i, j]);
+    if (!pairs.length) continue;
+    const [i, j] = pairs[Math.floor(Math.random() * pairs.length)];
+    const common = byTier[i][Math.floor(Math.random() * byTier[i].length)], rare = byTier[j][Math.floor(Math.random() * byTier[j].length)];
+    return { e, common, rare };
+  }
+  rr.used.clear(); return null;
+}
+function rrNext() {
+  let pick = rrPick(); if (!pick) pick = rrPick(); if (!pick) return rrOver("none");
+  const { e, common, rare } = pick;
+  rr.used.add(e.p.id + "|" + common.a); rr.used.add(e.p.id + "|" + rare.a); rr.lastPrompt = e.p.id;
+  rr.round++;
+  const rareSide = Math.random() < .5 ? 0 : 1;
+  rr.cur = { e, sides: rareSide === 0 ? [rare, common] : [common, rare], rareSide };
+  $("#rr-kicker").textContent = `Round ${rr.round} · from Craicillion #${e.dive}`;
+  $("#rr-prompt").textContent = e.p.prompt;
+  $("#rr-msg").innerHTML = "";
+  ["#rr-a", "#rr-b"].forEach((sel, k) => {
+    const c = $(sel), a = rr.cur.sides[k];
+    c.className = "rr-card rr-in"; c.disabled = false; c.style.removeProperty("--tc");
+    c.querySelector(".rr-name").textContent = a.a;
+    c.querySelector(".rr-reveal").innerHTML = "";
+    const t = c.querySelector(".tick"); if (t) t.remove();
+  });
+  rr.phase = "choosing";
+  rrTimer();
+}
+function rrTimer() {
+  rrStop();
+  const total = Math.max(5, 10 - Math.floor(rr.streak / 4)) * 1000, start = Date.now();
+  const fill = $("#rr-fill"), secs = $("#rr-secs"), air = $("#rr-air");
+  const tick = () => {
+    if (!rr || rr.phase !== "choosing") return;
+    const left = Math.max(0, total - (Date.now() - start));
+    fill.style.transform = `scaleX(${left / total})`; secs.textContent = Math.ceil(left / 1000); air.classList.toggle("low", left < 3000);
+    if (left <= 0) return rrChoose(-1);
+    rr.raf = requestAnimationFrame(tick);
+  };
+  tick();
+  rr.iv = setInterval(() => { if (rr && rr.phase === "choosing" && Date.now() - start >= total) rrChoose(-1); }, 200);
+}
+function rrStop() { if (rr) { cancelAnimationFrame(rr.raf); clearInterval(rr.iv); clearTimeout(rr.to); } }
+function rrChoose(k) {
+  if (!rr || rr.phase !== "choosing") return;
+  rr.phase = "reveal"; rrStop();
+  const right = k === rr.cur.rareSide;
+  ["#rr-a", "#rr-b"].forEach((sel, i) => {
+    const c = $(sel), a = rr.cur.sides[i], t = TIERS[a.tier];
+    c.disabled = true; c.style.setProperty("--tc", `var(--t-${a.tier})`);
+    c.querySelector(".rr-reveal").innerHTML = `<span class="badge ${a.tier}">${icon(a.tier)} ${esc(t.name)}</span><span class="pts">${t.pts} pts</span>`;
+    c.classList.remove("rr-in"); c.classList.add("revealed");
+    if (i === rr.cur.rareSide) { c.classList.add(i === k ? "right" : "dim"); if (i !== k && k !== -1) c.insertAdjacentHTML("beforeend", '<span class="tick">👈</span>'); }
+    if (i === k && !right) c.classList.add("wrong");
+    if (i === k && right) c.insertAdjacentHTML("beforeend", '<span class="tick">✅</span>');
+  });
+  if (right) {
+    rr.streak++; rr.trail.push(rr.cur.sides[rr.cur.rareSide].tier);
+    const s = $("#rr-streak"); s.textContent = `🔥 ${rr.streak}`; s.classList.remove("bump"); void s.offsetWidth; s.classList.add("bump");
+    if (rr.streak > rr.best) $("#rr-best").textContent = `Best ${rr.streak}`;
+    const [ga, en] = RR_PRAISE[Math.floor(Math.random() * RR_PRAISE.length)];
+    $("#rr-msg").innerHTML = `<span class="ga-line">${esc(ga)}</span>${en ? ` <span class="muted">· ${esc(en)}</span>` : ""}`;
+    setSea(Math.min(7000, rr.streak * 250));
+    if (!reduceMotion) { const r = $(k === 0 ? "#rr-a" : "#rr-b").getBoundingClientRect(); const tier = rr.cur.sides[k].tier;
+      burst(r.left + r.width / 2, r.top + r.height / 2, [`var(--t-${tier})`, "#ffffff", "#7ff0d8"].map((c) => getComputedStyle(document.documentElement).getPropertyValue(c.slice(4, -1)).trim() || c), 16, 130, 900); }
+    if (rr.streak % 10 === 0) { toast(`🔥 ${rr.streak} in a row! Unreal.`); if (!reduceMotion) burst(innerWidth / 2, innerHeight * .4, ["#ff5c6c", "#f4c95d", "#ffffff"], 40, Math.min(innerWidth, innerHeight) * .5, 1500); if (navigator.vibrate) try { navigator.vibrate([40, 30, 90]); } catch {} }
+    rr.to = setTimeout(rrNext, 1150);
+  } else {
+    const common = rr.cur.sides[1 - rr.cur.rareSide], rare = rr.cur.sides[rr.cur.rareSide];
+    rr.lost = { prompt: rr.cur.e.p.prompt, common, rare, timeout: k === -1 };
+    $("#rr-msg").innerHTML = `<span class="ga-line">Mo léan…</span> <span class="muted">· ${k === -1 ? "Out of air!" : "That's the more common one."}</span>`;
+    if (navigator.vibrate) try { navigator.vibrate(120); } catch {}
+    rr.to = setTimeout(() => rrOver(), 1500);
+  }
+}
+function rrOver(reason) {
+  rrStop(); rr.phase = "over";
+  const prevBest = rarerBest(), isBest = rr.streak > prevBest;
+  if (isBest) store.set(K_RARER, { best: rr.streak });
+  rr.best = Math.max(prevBest, rr.streak);
+  $("#rr-final").textContent = rr.streak;
+  $("#rr-newbest").hidden = !(isBest && rr.streak > 0);
+  $("#rr-over-best").textContent = isBest ? (prevBest ? `Old best was ${prevBest}` : "Your first record!") : `Your best: ${rr.best}`;
+  $("#rr-trail").innerHTML = rr.trail.slice(-40).map((t) => tile(t)).join("") + tile(null);
+  const L = rr.lost;
+  $("#rr-lost").innerHTML = reason === "none" ? "You've seen every pair we have. Legend." : L
+    ? `<div class="muted" style="font-size:.8rem;margin-bottom:4px">${esc(L.prompt)}</div><b>${esc(L.rare.a)}</b> is ${esc(TIERS[L.rare.tier].name)} (${TIERS[L.rare.tier].pts})<br><b>${esc(L.common.a)}</b> is ${esc(TIERS[L.common.tier].name)} (${TIERS[L.common.tier].pts})` : "";
+  $("#rr-over").hidden = false;
+  if (isBest && rr.streak >= 5 && !reduceMotion) burst(innerWidth / 2, innerHeight * .35, ["#ffd27a", "#ff5c6c", "#ffffff"], 36, Math.min(innerWidth, innerHeight) * .45, 1400);
+  $("#rr-again").focus({ preventScroll: true });
+}
+function rarerShareText() {
+  const sq = rr.trail.map((t) => TIERS[t].emoji);
+  const shown = sq.length > 20 ? sq.slice(0, 20).join("") + ` +${sq.length - 20}` : sq.join("");
+  return `Craicillion · Which is Rarer? 🦭\n🔥 ${rr.streak} in a row${rr.streak >= rr.best && rr.streak > 0 ? " (personal best!)" : ""}\n${shown}❌\n${SHARE_URL}`;
+}
 
 /* ---------- Stats ---------- */
 const slimResults = (rs) => rs.map((r) => ({ id: r.id, a: r.a, tier: r.tier, pts: r.pts, status: r.status, input: r.input, tries: r.tries || [] }));
@@ -13449,7 +13713,19 @@ function init() {
   $("#stats-btn").onclick = () => openModal("stats"); $("#res-stats").onclick = () => openModal("stats");
   $("#archive-btn").onclick = () => openModal("archive"); $("#res-archive").onclick = () => openModal("archive");
   $("#res-home").onclick = renderHome;
-  $("#share-btn").onclick = share;
+  $("#share-btn").onclick = () => share();
+  $("#rarer-btn").onclick = startRarer;
+  $("#rr-a").onclick = () => rrChoose(0); $("#rr-b").onclick = () => rrChoose(1);
+  $("#rr-again").onclick = startRarer;
+  $("#rr-home").onclick = () => { rrStop(); renderHome(); };
+  $("#rr-quit").onclick = () => { rrStop(); if (rr) rr.phase = "idle"; renderHome(); };
+  $("#rr-share").onclick = () => share(rarerShareText());
+  document.addEventListener("keydown", (e) => {
+    if (!$("#rarer").classList.contains("active") || document.querySelector(".modal.open")) return;
+    if (rr && rr.phase === "choosing" && (e.key === "1" || e.key === "ArrowUp" || e.key.toLowerCase() === "a")) { e.preventDefault(); rrChoose(0); }
+    else if (rr && rr.phase === "choosing" && (e.key === "2" || e.key === "ArrowDown" || e.key.toLowerCase() === "b")) { e.preventDefault(); rrChoose(1); }
+    else if (rr && rr.phase === "over" && e.key === "Enter" && document.activeElement === document.body) { e.preventDefault(); startRarer(); }
+  });
   $("#quit-btn").onclick = () => { if (mode === "free") return endFree(); if (mode === "daily" && phase === "answering") saveDaily(); renderHome(); if (mode === "archive") openModal("archive"); };
   $("#answer-form").addEventListener("submit", onSubmit);
   // keep the keyboard open when tapping the button on phones
@@ -13474,7 +13750,7 @@ function init() {
   if (!store.get("craicillion:seen-howto", false)) { store.set("craicillion:seen-howto", true); setTimeout(() => openModal("howto"), 350); }
   renderHome();
 }
-window.__craicillion = { percentileFor, norm, matchAnswer, promptIdsForDive, diveNumber, todayKey, dateForDive, PROMPTS, TIERS, shareText: () => shareText() };
+window.__craicillion = { rarerPool, percentileFor, norm, matchAnswer, promptIdsForDive, diveNumber, todayKey, dateForDive, PROMPTS, TIERS, shareText: () => shareText() };
 init();
 </script>
 </body>
