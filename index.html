@@ -48,9 +48,10 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;}
+html{background-color:var(--sea-bot);transition:--sea-bot 1.4s ease}
 body{
-  background:#06223a;
-  background:linear-gradient(180deg,var(--sea-top) 0%,var(--sea-bot) 100%);
+  background-color:var(--sea-bot);
+  background-image:linear-gradient(180deg,var(--sea-top) 0%,var(--sea-bot) 100%);
   transition:--sea-top 1.4s ease, --sea-bot 1.4s ease;
   color:var(--ink); overflow:hidden; -webkit-tap-highlight-color:transparent;
   -webkit-font-smoothing:antialiased;
@@ -266,6 +267,77 @@ form.answer{display:flex;gap:8px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (min-width:700px){.gauge{width:150px}.lm{font-size:.8rem}}
 @media (max-height:560px){.home-seal{width:90px}.tagline{display:none}}
+/* ===================== Design layer ===================== */
+:root{--kelp:1;--fish:.6;--glow:.08}
+.caustics{position:absolute;inset:0 0 45% 0;opacity:calc(var(--rays) * .5);transition:opacity 1.4s;mix-blend-mode:soft-light;
+  background:radial-gradient(40% 18% at 20% 10%,rgba(255,255,255,.55),transparent 70%),radial-gradient(30% 14% at 70% 6%,rgba(255,255,255,.5),transparent 70%),radial-gradient(35% 16% at 45% 22%,rgba(255,255,255,.35),transparent 70%);
+  animation:caustic 9s ease-in-out infinite alternate}
+@keyframes caustic{to{transform:translate(4%,2%) scale(1.08)}}
+.fishes{position:absolute;inset:0;opacity:var(--fish);transition:opacity 1.4s}
+.fish{position:absolute;left:-60px;fill:rgba(4,40,58,.42);animation:swim linear infinite}
+.fish.f1{top:24%;width:30px;animation-duration:28s;animation-delay:-4s}
+.fish.f2{top:27%;width:22px;animation-duration:28s;animation-delay:-5.2s}
+.fish.f3{top:30%;width:26px;animation-duration:28s;animation-delay:-6s}
+.fish.f4{top:52%;width:38px;animation-duration:41s;animation-delay:-18s;transform:scaleX(-1)}
+.fish.f5{top:64%;width:20px;animation-duration:33s;animation-delay:-25s}
+@keyframes swim{0%{transform:translate(0,0)}50%{transform:translate(60vw,-14px)}100%{transform:translate(calc(100vw + 120px),6px)}}
+.fish.f4{animation-name:swimback;left:auto;right:-70px}
+@keyframes swimback{0%{transform:scaleX(-1) translate(0,0)}100%{transform:scaleX(-1) translate(calc(100vw + 140px),-10px)}}
+.deep{position:absolute;inset:0;opacity:var(--glow);transition:opacity 1.6s}
+.spark{position:absolute;border-radius:50%;background:radial-gradient(circle,#8ff5df,rgba(143,245,223,0) 70%);box-shadow:0 0 8px rgba(143,245,223,.7);animation:twinkle ease-in-out infinite alternate}
+@keyframes twinkle{from{opacity:.15;transform:scale(.7)}to{opacity:1;transform:scale(1.2)}}
+.jelly{position:absolute;width:34px;fill:rgba(181,133,255,.18);stroke:#c9a7ff;stroke-width:1.6;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(201,167,255,.8));animation:jelly 10s ease-in-out infinite alternate}
+.jelly path+path{fill:none}
+.jelly.j1{left:12%;top:38%}.jelly.j2{right:10%;top:62%;width:26px;animation-delay:-4s}.jelly.j3{left:58%;top:18%;width:20px;animation-delay:-7s}
+@keyframes jelly{0%{transform:translateY(0) scaleY(1)}25%{transform:translateY(-18px) scaleY(.92)}50%{transform:translateY(-8px) scaleY(1.04)}100%{transform:translateY(-40px) scaleY(.95)}}
+.seabed{position:absolute;left:0;right:0;bottom:0;width:100%;height:min(22vh,170px);opacity:var(--kelp);transition:opacity 1.4s}
+.seabed .rocks{fill:#04263a}
+.seabed .kelp path{fill:none;stroke:#0e7a66;stroke-width:7;stroke-linecap:round;opacity:.75}
+.seabed .kelp path:nth-child(even){stroke:#11937a;stroke-width:5}
+.sway{transform-origin:50% 100%;transform-box:fill-box;animation:kelp 6s ease-in-out infinite alternate}
+@keyframes kelp{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+/* logo + cards + buttons */
+.logo{background:linear-gradient(180deg,#ffffff 20%,#a6f7e4 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;
+  filter:drop-shadow(0 2px 0 rgba(0,40,50,.35)) drop-shadow(0 0 22px rgba(127,240,216,.35))}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.015)),var(--glass);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 18px 40px -20px rgba(0,0,0,.55)}
+.btn-primary{position:relative;overflow:hidden;background:linear-gradient(180deg,#a6fbe7,#4fd1bd 55%,#36b4a6)}
+.btn-primary::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.6) 50%,transparent 65%);transform:translateX(-130%);animation:shine 5s ease-in-out 1.2s infinite;pointer-events:none}
+@keyframes shine{0%,62%{transform:translateX(-130%)}82%,100%{transform:translateX(130%)}}
+.btn-ghost{background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.home-row .btn svg{width:34px;height:34px;padding:7px;border-radius:11px;background:rgba(255,255,255,.12);margin-bottom:3px}
+/* today card */
+.today{width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px;padding:14px 16px;text-align:left}
+.today-main{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:10px}
+.today-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);font-weight:700}
+.today-no{grid-row:2;font-size:1.25rem;font-weight:800}
+.today-date{grid-row:1 / span 2;grid-column:2;align-self:center;font-size:.85rem;color:var(--muted);text-align:right}
+.today-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.today-stats div{text-align:center}
+.today-stats b{display:block;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.today-stats span{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+/* game */
+.kicker{font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);font-weight:700;margin-bottom:6px}
+.prompt-card{overflow:hidden;flex:none;transition:box-shadow .35s ease}
+.prompt-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--accent),transparent)}
+.prompt-card.feedback::before{background:linear-gradient(180deg,var(--tc,var(--accent)),transparent)}
+.prompt-card.feedback{box-shadow:inset 0 0 0 1.5px var(--tc,transparent),0 14px 44px -14px var(--tc,transparent),inset 0 1px 0 rgba(255,255,255,.14)}
+.air-track{height:14px;background:rgba(0,0,0,.32);box-shadow:inset 0 2px 4px rgba(0,0,0,.35)}
+.air-fill{background:repeating-linear-gradient(-45deg,rgba(255,255,255,.28) 0 6px,transparent 6px 12px),linear-gradient(90deg,#5fe3c9,#b8fff0);background-size:17px 17px,100% 100%;animation:airflow 1s linear infinite;box-shadow:0 0 12px rgba(127,240,216,.5)}
+@keyframes airflow{to{background-position:17px 0,0 0}}
+.air.low .air-fill{background:repeating-linear-gradient(-45deg,rgba(255,255,255,.25) 0 6px,transparent 6px 12px),linear-gradient(90deg,#ff6b5b,#ffb199);background-size:17px 17px,100% 100%;box-shadow:0 0 14px rgba(255,107,91,.6)}
+.air.low .air-secs{color:#ff9a8a;animation:beat .8s ease-in-out infinite}
+@keyframes beat{50%{transform:scale(1.18)}}
+#answer{background:rgba(2,16,28,.62);box-shadow:inset 0 2px 6px rgba(0,0,0,.35)}
+/* results */
+.res-hero{overflow:hidden;flex:none}
+#results>*,#home>*{flex-shrink:0}
+.res-hero::before{content:"";position:absolute;inset:-40% -20% auto -20%;height:70%;background:radial-gradient(closest-side,rgba(127,240,216,.18),transparent);pointer-events:none}
+.res-squares .tile{animation:tilepop .5s cubic-bezier(.2,1.6,.4,1) both;box-shadow:0 6px 16px -6px rgba(0,0,0,.5)}
+.res-squares .tile:nth-child(2){animation-delay:.08s}.res-squares .tile:nth-child(3){animation-delay:.16s}.res-squares .tile:nth-child(4){animation-delay:.24s}
+.res-squares .tile:nth-child(5){animation-delay:.32s}.res-squares .tile:nth-child(6){animation-delay:.4s}.res-squares .tile:nth-child(7){animation-delay:.48s}
+@keyframes tilepop{from{transform:scale(.3) rotate(-12deg);opacity:0}}
+.res-depth{background:linear-gradient(180deg,#fff,#a6f7e4);-webkit-background-clip:text;background-clip:text;color:transparent}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
   .bubble,.mote{display:none}
@@ -273,7 +345,32 @@ form.answer{display:flex;gap:8px}
 </style>
 </head>
 <body>
-<div id="sea" aria-hidden="true"><div class="rays"></div><div class="surface"></div></div>
+<div id="sea" aria-hidden="true">
+  <div class="rays"></div><div class="surface"></div><div class="caustics"></div>
+  <div class="fishes">
+    <svg class="fish f1" viewBox="0 0 40 20"><path d="M2 10C8 3 20 2 28 7l8-5-2 8 2 8-8-5C20 18 8 17 2 10Z"/></svg>
+    <svg class="fish f2" viewBox="0 0 40 20"><path d="M2 10C8 3 20 2 28 7l8-5-2 8 2 8-8-5C20 18 8 17 2 10Z"/></svg>
+    <svg class="fish f3" viewBox="0 0 40 20"><path d="M2 10C8 3 20 2 28 7l8-5-2 8 2 8-8-5C20 18 8 17 2 10Z"/></svg>
+    <svg class="fish f4" viewBox="0 0 40 20"><path d="M2 10C8 3 20 2 28 7l8-5-2 8 2 8-8-5C20 18 8 17 2 10Z"/></svg>
+    <svg class="fish f5" viewBox="0 0 40 20"><path d="M2 10C8 3 20 2 28 7l8-5-2 8 2 8-8-5C20 18 8 17 2 10Z"/></svg>
+  </div>
+  <div class="deep" id="deep">
+    <svg class="jelly j1" viewBox="0 0 40 60"><path d="M4 20a16 16 0 0 1 32 0c0 3-2 4-4 4H8c-2 0-4-1-4-4Z"/><path d="M10 25c0 8-3 12 0 20M17 25c0 10 3 14 0 24M24 25c0 9-3 13 0 22M31 25c0 7 3 11 0 18"/></svg>
+    <svg class="jelly j2" viewBox="0 0 40 60"><path d="M4 20a16 16 0 0 1 32 0c0 3-2 4-4 4H8c-2 0-4-1-4-4Z"/><path d="M10 25c0 8-3 12 0 20M17 25c0 10 3 14 0 24M24 25c0 9-3 13 0 22M31 25c0 7 3 11 0 18"/></svg>
+    <svg class="jelly j3" viewBox="0 0 40 60"><path d="M4 20a16 16 0 0 1 32 0c0 3-2 4-4 4H8c-2 0-4-1-4-4Z"/><path d="M10 25c0 8-3 12 0 20M17 25c0 10 3 14 0 24M24 25c0 9-3 13 0 22M31 25c0 7 3 11 0 18"/></svg>
+  </div>
+  <svg class="seabed" viewBox="0 0 400 200" preserveAspectRatio="xMidYMax slice">
+    <g class="kelp">
+      <path class="sway" style="animation-delay:-1s" d="M28 200C18 165 40 140 30 108S38 62 32 30"/>
+      <path class="sway" style="animation-delay:-3s" d="M52 200C44 172 62 150 54 122S60 86 56 60"/>
+      <path class="sway" style="animation-delay:-2s" d="M78 200C70 178 88 160 80 140S86 112 82 92"/>
+      <path class="sway" style="animation-delay:-4s" d="M318 200C308 170 330 146 320 116S328 76 322 46"/>
+      <path class="sway" style="animation-delay:-2.5s" d="M346 200C338 176 356 156 348 132S354 100 350 76"/>
+      <path class="sway" style="animation-delay:-.5s" d="M372 200C364 180 382 164 374 146S378 120 376 104"/>
+    </g>
+    <path class="rocks" d="M0 200V172q26-16 52-6 22-22 54-8 24 10 40-2 30-14 58 4 22-14 50-6 30 8 46-6 28-10 52 6 26-12 48 0V200Z"/>
+  </svg>
+</div>
 
 <main id="app">
   <!-- ================= HOME ================= -->
@@ -282,7 +379,18 @@ form.answer{display:flex;gap:8px}
     <h1 class="logo" id="home-title">Craicillion</h1>
     <div class="knot" style="width:200px"></div>
     <p class="tagline">Dive off the Forty Foot. Say the answer nobody else would.</p>
-    <div class="dive-no"><span id="home-dive">Craicillion #1</span><span class="muted">·</span><span id="home-date" class="muted"></span></div>
+    <div class="today card">
+      <div class="today-main">
+        <span class="today-label">Today's dive</span>
+        <span class="today-no" id="home-dive">Craicillion #1</span>
+        <span class="today-date" id="home-date"></span>
+      </div>
+      <div class="today-stats">
+        <div><b id="home-streak">0</b><span>Streak</span></div>
+        <div><b id="home-best">0 m</b><span>Best</span></div>
+        <div><b id="home-played">0</b><span>Dives</span></div>
+      </div>
+    </div>
     <div class="home-actions">
       <button class="btn btn-primary" id="start-btn"><span class="ga">Tosaigh</span><small>Start the Dive</small></button>
       <div class="home-row">
@@ -318,6 +426,7 @@ form.answer{display:flex;gap:8px}
     </div>
     <div class="card prompt-card" id="prompt-card" aria-live="polite">
       <div class="q">
+        <div class="kicker" id="kicker">Prompt 1 of 7</div>
         <p class="prompt-text" id="prompt-text">…</p>
         <div class="prompt-sub">One answer. The rarer, the deeper.</div>
       </div>
@@ -13059,6 +13168,9 @@ function setSea(depthM) {
   const r = document.documentElement.style;
   r.setProperty("--sea-top", lerpHex(t0, t1, t)); r.setProperty("--sea-bot", lerpHex(b0, b1, t));
   r.setProperty("--rays", String(Math.max(0, 1 - f * 3.2)));
+  r.setProperty("--kelp", String(Math.max(0, 1 - f * 2.6)));                  // kelp & rocks near the top
+  r.setProperty("--fish", String(Math.max(0, 1 - Math.abs(f - 0.18) * 3.2))); // fish in the shallows
+  r.setProperty("--glow", String(Math.min(1, Math.max(0.08, (f - 0.3) / 0.4)))); // glowing life in the deep
   document.querySelector('meta[name="theme-color"]').content = lerpHex(t0, t1, t);
 }
 const gaugeFrac = (m) => Math.sqrt(Math.min(1, Math.max(0, m / 7000))); // sqrt so shallow landmarks get room
@@ -13096,7 +13208,14 @@ function tweenDepth(to) {
   requestAnimationFrame(step);
 }
 function makeBubbles() {
-  const sea = $("#sea"); if (reduceMotion) return;
+  const sea = $("#sea"), deep = $("#deep");
+  for (let i = 0; i < 34; i++) { const g = document.createElement("span"); g.className = "spark";
+    const z = 2 + Math.random() * 4; g.style.width = g.style.height = z + "px";
+    g.style.left = Math.random() * 100 + "%"; g.style.top = 8 + Math.random() * 84 + "%";
+    g.style.animationDelay = -Math.random() * 6 + "s"; g.style.animationDuration = 3 + Math.random() * 5 + "s";
+    if (Math.random() < .3) g.style.background = "radial-gradient(circle,#c9a7ff,rgba(201,167,255,0) 70%)";
+    deep.appendChild(g); }
+  if (reduceMotion) return;
   for (let i = 0; i < 18; i++) { const b = document.createElement("span"); b.className = "bubble";
     const s = 4 + Math.random() * 14; b.style.width = b.style.height = s + "px"; b.style.left = Math.random() * 100 + "%";
     b.style.animationDuration = 9 + Math.random() * 14 + "s"; b.style.animationDelay = -Math.random() * 20 + "s"; sea.appendChild(b); }
@@ -13117,6 +13236,10 @@ function renderHome() {
   $("#home-seal-wrap").innerHTML = seamusSVG("home-seal");
   $("#home-dive").textContent = `Craicillion #${daily.dive}`;
   $("#home-date").textContent = prettyDate(key);
+  const st = computeStats();
+  $("#home-streak").textContent = (st.curStreak ? "🔥 " : "") + st.curStreak;
+  $("#home-best").textContent = fmtM(st.best);
+  $("#home-played").textContent = st.played;
   const btn = $("#start-btn");
   if (daily.done) btn.innerHTML = `<span class="ga">Do thorthaí</span><small>See today's results</small>`;
   else if (daily.idx > 0) btn.innerHTML = `<span class="ga">Lean ar aghaidh</span><small>Resume dive · ${daily.idx + 1}/${PROMPTS_PER_DIVE}</small>`;
@@ -13178,6 +13301,8 @@ function nextPrompt() {
   phase = "answering";
   const card = $("#prompt-card"); card.classList.remove("feedback");
   $("#prompt-text").textContent = p.prompt;
+  $("#kicker").textContent = mode === "free" ? `Infinite · round ${g.round} · ${g.results.length + 1} of ${PROMPTS_PER_DIVE}` : `Prompt ${g.idx + 1} of ${PROMPTS_PER_DIVE}`;
+  card.style.removeProperty("--tc");
   $("#fb").innerHTML = ""; tries = []; hint("");
   const input = $("#answer"); input.value = ""; input.placeholder = "Type your answer…";
   $("#go").textContent = "Dive";
@@ -13263,6 +13388,7 @@ function showFeedback(p, r) {
   fb.innerHTML = `<div class="fb-q">${esc(p.prompt)}</div><div class="fb-top">${top}</div><div class="fb-copy">${copy}</div>
     ${said ? `<div class="fb-said">${said}</div>` : ""}
     ${picks ? `<div class="fb-picks"><span class="muted">Deep cuts you could've said:</span><br>${picks}</div>` : ""}`;
+  card.style.setProperty("--tc", `var(--t-${r.tier || "miss"})`);
   card.classList.add("feedback");
   const last = roundOver();
   $("#go").textContent = last ? "Surface" : "Next";
