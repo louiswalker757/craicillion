@@ -189,13 +189,14 @@ form.answer{display:flex;gap:8px}
 .res-lm b{font-family:'Uncial Antiqua',serif;font-weight:400;font-size:1.2rem;color:var(--accent)}
 .res-squares{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:10px}
 .badge .ti{width:1.2em;height:1.2em;flex:none;margin-left:-.15em}
-.tile{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:10px;color:#061a26;flex:none}
-.tile .ti{width:66%;height:66%}
-.tile.sure{background:var(--t-sure)}.tile.notions{background:var(--t-notions)}.tile.sound{background:var(--t-sound)}
-.tile.savage{background:var(--t-savage)}.tile.deadly{background:var(--t-deadly)}.tile.craic{background:var(--t-craic);color:#fff}
-.tile.miss{background:transparent;box-shadow:inset 0 0 0 2px var(--t-miss);color:var(--t-miss)}
+.tile{display:inline-grid;place-items:center;width:38px;height:38px;flex:none;--tc:var(--t-miss);color:var(--tc);
+  filter:drop-shadow(0 0 6px color-mix(in srgb,var(--tc) 55%,transparent)) drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+.tile .ti{width:100%;height:100%;stroke-width:2.1}
+.tile.sure{--tc:var(--t-sure)}.tile.notions{--tc:var(--t-notions)}.tile.sound{--tc:var(--t-sound)}
+.tile.savage{--tc:var(--t-savage)}.tile.deadly{--tc:var(--t-deadly)}.tile.craic{--tc:var(--t-craic)}
+.tile.miss{--tc:var(--t-miss);filter:none;opacity:.85}
 .bar-name{display:flex;align-items:center;gap:6px}
-.bar-name .tile{width:18px;height:18px;border-radius:5px}
+.bar-name .tile{width:18px;height:18px}
 .res-curve{margin:14px auto 0;max-width:360px}
 .res-curve .pct{font-size:1.05rem;font-weight:700;margin-bottom:6px}
 .res-curve .pct b{font-size:1.5rem;color:var(--accent);font-variant-numeric:tabular-nums}
@@ -258,7 +259,7 @@ form.answer{display:flex;gap:8px}
 .arch-date{font-size:.9rem}
 .arch-date small{display:block;color:var(--muted);font-size:.75rem;margin-top:1px}
 .arch-sq{display:flex;gap:3px;margin-top:5px}
-.arch-sq .tile{width:19px;height:19px;border-radius:5px}
+.arch-sq .tile{width:19px;height:19px}
 .arch-right{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
 .arch-right small{display:block;font-weight:600;font-size:.72rem;color:var(--muted)}
 .arch-play{color:var(--accent);font-weight:800}
@@ -334,26 +335,33 @@ form.answer{display:flex;gap:8px}
 #results>*,#home>*{flex-shrink:0}
 #rarer{position:relative}
 .res-hero::before{content:"";position:absolute;inset:-40% -20% auto -20%;height:70%;background:radial-gradient(closest-side,rgba(127,240,216,.18),transparent);pointer-events:none}
-.res-squares .tile{animation:tilepop .5s cubic-bezier(.2,1.6,.4,1) both;box-shadow:0 6px 16px -6px rgba(0,0,0,.5)}
+.res-squares .tile{animation:tilepop .5s cubic-bezier(.2,1.6,.4,1) both}
 .res-squares .tile:nth-child(2){animation-delay:.08s}.res-squares .tile:nth-child(3){animation-delay:.16s}.res-squares .tile:nth-child(4){animation-delay:.24s}
 .res-squares .tile:nth-child(5){animation-delay:.32s}.res-squares .tile:nth-child(6){animation-delay:.4s}.res-squares .tile:nth-child(7){animation-delay:.48s}
 @keyframes tilepop{from{transform:scale(.3) rotate(-12deg);opacity:0}}
 .res-depth{background:linear-gradient(180deg,#fff,#a6f7e4);-webkit-background-clip:text;background-clip:text;color:transparent}
 /* ===== Which is Rarer? ===== */
-.ltm-ribbon{position:absolute;top:0;right:0;width:104px;height:104px;overflow:hidden;pointer-events:none;z-index:2}
-.ltm-ribbon span{position:absolute;top:20px;right:-36px;width:150px;transform:rotate(45deg);text-align:center;padding:4px 0;
-  font-size:.58rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#2a0e14;
-  background:linear-gradient(90deg,#ff7a86,#f4c95d);box-shadow:0 3px 10px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.5)}
+.ltm-ribbon{position:absolute;top:0;right:14px;z-index:2;pointer-events:none;display:inline-flex;align-items:center;gap:6px;
+  padding:5px 10px 6px 9px;border-radius:0 0 10px 10px;overflow:hidden;white-space:nowrap;
+  font-size:.6rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;line-height:1;color:#3b1d02;
+  background:linear-gradient(180deg,#ffe7a3,#f6c14f 55%,#e9a531);
+  box-shadow:0 6px 14px -4px rgba(0,0,0,.5),inset 0 -1px 0 rgba(120,60,0,.35),inset 0 1px 0 rgba(255,255,255,.6)}
+.ltm-ribbon::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;height:auto;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.75),transparent);transform:skewX(-20deg);animation:ltmShine 4.5s ease-in-out infinite}
+.ltm-dot{width:7px;height:7px;border-radius:50%;flex:none;background:#e5263b;box-shadow:0 0 0 0 rgba(229,38,59,.6);animation:ltmPulse 1.6s ease-out infinite}
+@keyframes ltmShine{0%,62%{left:-60%}100%{left:130%}}
+@keyframes ltmPulse{0%{box-shadow:0 0 0 0 rgba(229,38,59,.65)}80%,100%{box-shadow:0 0 0 6px rgba(229,38,59,0)}}
+@media (prefers-reduced-motion:reduce){.ltm-ribbon::after,.ltm-dot{animation:none}}
 .rr-feature{appearance:none;width:100%;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:12px;align-items:center;
-  text-align:left;padding:14px 16px;cursor:pointer;overflow:hidden;color:inherit;font:inherit;border:1px solid rgba(244,201,93,.45);
+  text-align:left;padding:28px 16px 14px;cursor:pointer;overflow:hidden;color:inherit;font:inherit;border:1px solid rgba(244,201,93,.45);
   background:linear-gradient(135deg,rgba(255,92,108,.22),rgba(244,201,93,.12) 55%,rgba(255,255,255,.04)),var(--glass)}
 .rr-feature:active{transform:scale(.98)}
 .rr-feature:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 .rr-f-icons{grid-row:1 / span 2;display:flex;align-items:center;gap:4px}
-.rr-f-icons .tile{width:30px;height:30px;border-radius:8px}
+.rr-f-icons .tile{width:30px;height:30px}
 .rr-f-vs{font-size:.62rem;font-weight:800;color:var(--muted);text-transform:uppercase}
 .rr-f-text b{display:block;font-size:1.05rem}
-.rr-f-text small{display:block;color:var(--muted);font-size:.8rem;line-height:1.3;padding-right:52px}
+.rr-f-text small{display:block;color:var(--muted);font-size:.8rem;line-height:1.3}
 .rr-f-best{grid-column:2;font-size:.75rem;font-weight:700;color:var(--gold);margin-top:4px}
 .rr-f-best:empty{display:none}
 #rarer{gap:10px}
@@ -362,8 +370,8 @@ form.answer{display:flex;gap:8px}
 .rr-head small{font-size:.7rem;color:var(--muted)}
 .rr-streak{display:inline-block;font-size:1.25rem}
 .rr-streak.bump{animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
-.rr-cat{padding:16px 18px 14px;flex:none;overflow:hidden}
-.rr-prompt{font-size:clamp(1.15rem,5vw,1.5rem);font-weight:700;line-height:1.2;margin:0;padding-right:46px;text-wrap:balance}
+.rr-cat{padding:28px 18px 14px;flex:none;overflow:hidden}
+.rr-prompt{font-size:clamp(1.15rem,5vw,1.5rem);font-weight:700;line-height:1.2;margin:0;text-wrap:balance}
 .rr-pair{flex:1;min-height:0;display:flex;flex-direction:column;gap:0;justify-content:center;max-height:360px}
 .rr-card{appearance:none;position:relative;flex:1;min-height:92px;max-height:150px;border-radius:20px;border:2px solid rgba(255,255,255,.18);cursor:pointer;
   color:var(--ink);font:inherit;padding:14px 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;
@@ -396,7 +404,7 @@ form.answer{display:flex;gap:8px}
 @keyframes rrIn{from{opacity:0;transform:translateY(14px) scale(.98)}}
 .rr-over{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(1,8,16,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .rr-over[hidden]{display:none}
-.rr-over-card{width:100%;max-width:400px;padding:22px 18px 18px;text-align:center;overflow:hidden;animation:slideup .35s cubic-bezier(.2,.9,.3,1)}
+.rr-over-card{width:100%;max-width:400px;padding:34px 18px 18px;text-align:center;overflow:hidden;animation:slideup .35s cubic-bezier(.2,.9,.3,1)}
 .rr-over-streak{margin:8px 0 2px}
 .rr-over-streak span{display:block;font-size:4.2rem;font-weight:900;line-height:1;background:linear-gradient(180deg,#fff,#ffd27a);-webkit-background-clip:text;background-clip:text;color:transparent}
 .rr-over-streak small{color:var(--muted);font-weight:600}
@@ -404,7 +412,7 @@ form.answer{display:flex;gap:8px}
 .rr-newbest[hidden]{display:none}
 .rr-over-best{margin-top:6px;color:var(--muted);font-size:.9rem}
 .rr-trail{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin:12px 0 4px}
-.rr-trail .tile{width:22px;height:22px;border-radius:6px}
+.rr-trail .tile{width:22px;height:22px}
 .rr-lost{font-size:.9rem;line-height:1.45;margin:10px 0 14px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.2);border:1px solid var(--line)}
 .rr-lost b{color:var(--ink)}
 .rr-over-actions{display:flex;flex-direction:column;gap:10px}
@@ -485,7 +493,7 @@ form.answer{display:flex;gap:8px}
     <div class="home-actions">
       <button class="btn btn-primary" id="start-btn"><span class="ga">Tosaigh</span><small>Start the Dive</small></button>
       <button class="rr-feature card" id="rarer-btn" aria-label="Which is Rarer? Limited time mode">
-        <span class="ltm-ribbon" aria-hidden="true"><span>Limited time</span></span>
+        <span class="ltm-ribbon" aria-hidden="true"><i class="ltm-dot"></i>Limited time</span>
         <span class="rr-f-icons" aria-hidden="true"><span class="rr-f-a"></span><span class="rr-f-vs">vs</span><span class="rr-f-b"></span></span>
         <span class="rr-f-text"><b>Which is Rarer?</b><small>Two answers. Tap the rarer one. How long can you last?</small></span>
         <span class="rr-f-best" id="home-rr-best"></span>
@@ -555,7 +563,7 @@ form.answer{display:flex;gap:8px}
       <span class="air-secs" id="rr-secs">10</span>
     </div>
     <div class="card rr-cat">
-      <span class="ltm-ribbon" aria-hidden="true"><span>Limited time</span></span>
+      <span class="ltm-ribbon" aria-hidden="true"><i class="ltm-dot"></i>Limited time</span>
       <div class="kicker" id="rr-kicker">Round 1</div>
       <p class="rr-prompt" id="rr-prompt">…</p>
       <div class="prompt-sub">Tap the answer <b>fewer</b> people would say.</div>
@@ -568,7 +576,7 @@ form.answer{display:flex;gap:8px}
     <div class="rr-msg" id="rr-msg" aria-live="polite"></div>
     <div class="rr-over" id="rr-over" hidden>
       <div class="card rr-over-card">
-        <span class="ltm-ribbon" aria-hidden="true"><span>Limited time</span></span>
+        <span class="ltm-ribbon" aria-hidden="true"><i class="ltm-dot"></i>Limited time</span>
         <div class="kicker">Which is Rarer?</div>
         <div class="rr-over-streak"><span id="rr-final">0</span><small>in a row</small></div>
         <div class="rr-newbest" id="rr-newbest" hidden>🏆 New best!</div>
@@ -13527,7 +13535,7 @@ function rrNext() {
   rr.round++;
   const rareSide = Math.random() < .5 ? 0 : 1;
   rr.cur = { e, sides: rareSide === 0 ? [rare, common] : [common, rare], rareSide };
-  $("#rr-kicker").textContent = `Round ${rr.round} · from Craicillion #${e.dive}`;
+  $("#rr-kicker").textContent = `Round ${rr.round} · from Dive #${e.dive}`;
   $("#rr-prompt").textContent = e.p.prompt;
   $("#rr-msg").innerHTML = "";
   ["#rr-a", "#rr-b"].forEach((sel, k) => {
