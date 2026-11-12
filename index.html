@@ -267,6 +267,50 @@ form.answer{display:flex;gap:8px}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (min-width:700px){.gauge{width:150px}.lm{font-size:.8rem}}
+.seal-stage{position:relative;width:100%;display:flex;justify-content:center}
+#home-seal-wrap{cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:50%}
+#home-seal-wrap:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+#home-seal-wrap.poke .home-seal{animation:poke .5s cubic-bezier(.2,1.6,.4,1)}
+/* Séamus moves while he talks */
+.s-mouth{transform-box:fill-box;transform-origin:50% 0;transform:scaleY(0)}
+.s-fl,.s-fr{transform-box:fill-box}
+.s-fl{transform-origin:100% 0}.s-fr{transform-origin:0 0}
+#home-seal-wrap.talking .s-mouth{animation:sTalk .9s ease-in-out infinite}
+#home-seal-wrap.talking .s-fl{animation:sFlapL .7s ease-in-out 3}
+#home-seal-wrap.talking .s-fr{animation:sFlapR .7s ease-in-out 3}
+@keyframes sTalk{0%,100%{transform:scaleY(.15)}15%{transform:scaleY(1)}30%{transform:scaleY(.35)}48%{transform:scaleY(.9)}62%{transform:scaleY(.2)}80%{transform:scaleY(.75)}}
+@keyframes sFlapL{50%{transform:rotate(22deg)}}
+@keyframes sFlapR{50%{transform:rotate(-22deg)}}
+#home-seal-wrap.m-hop .home-seal{animation:sHop 1.1s cubic-bezier(.3,.7,.4,1)}
+#home-seal-wrap.m-wiggle .home-seal{animation:sWiggle 1.2s ease-in-out}
+#home-seal-wrap.m-spin .home-seal{animation:sSpin 1.3s cubic-bezier(.45,.05,.3,1)}
+#home-seal-wrap.m-lean .home-seal{animation:sLean 1.8s cubic-bezier(.3,.8,.3,1)}
+#home-seal-wrap.m-nod .home-seal{animation:sNod 1.2s ease-in-out}
+#home-seal-wrap.m-shimmy .home-seal{animation:sShimmy 1s ease-in-out}
+@keyframes sHop{20%{transform:translateY(4px) scale(1.07,.9)}45%{transform:translateY(-28px) scale(.94,1.07)}70%{transform:translateY(0) scale(1.06,.93)}85%{transform:translateY(-6px)}}
+@keyframes sWiggle{15%{transform:rotate(-9deg)}35%{transform:rotate(8deg)}55%{transform:rotate(-6deg)}75%{transform:rotate(4deg)}}
+@keyframes sSpin{30%{transform:translateY(-22px) rotate(160deg)}65%{transform:translateY(-10px) rotate(360deg)}85%{transform:translateY(2px) rotate(360deg) scale(1.05,.95)}100%{transform:rotate(360deg)}}
+@keyframes sLean{25%,70%{transform:translateX(10px) rotate(10deg)}}
+@keyframes sNod{18%,58%{transform:translateY(6px) rotate(-4deg) scale(1.03,.95)}38%,78%{transform:translateY(-4px)}}
+@keyframes sShimmy{10%,30%,50%,70%{transform:translateX(-6px) rotate(-3deg)}20%,40%,60%,80%{transform:translateX(6px) rotate(3deg)}}
+@keyframes poke{30%{transform:rotate(-7deg) scale(1.05)}65%{transform:rotate(5deg)}}
+.seal-bubble{position:absolute;left:calc(50% + min(13vw,62px));top:2%;z-index:3;width:max-content;max-width:min(190px,calc(50% - min(13vw,62px) - 2px));
+  padding:10px 14px;border-radius:26px;color:#f2fffd;font-weight:700;font-size:.84rem;line-height:1.25;text-align:left;text-shadow:0 1px 3px rgba(2,20,32,.55);
+  background:radial-gradient(120% 90% at 30% 18%,rgba(255,255,255,.26),rgba(255,255,255,.07) 45%,rgba(127,240,216,.08) 75%,rgba(255,255,255,.16)),rgba(4,40,60,.22);
+  border:1.5px solid rgba(225,252,255,.55);
+  box-shadow:inset 0 0 16px rgba(255,255,255,.14),inset -5px -7px 14px rgba(127,240,216,.16),0 8px 20px -10px rgba(0,0,0,.35);
+  backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);pointer-events:none;
+  opacity:0;transform:translateY(12px) scale(.6);transform-origin:0% 100%;transition:opacity .3s ease,transform .45s cubic-bezier(.2,1.4,.4,1)}
+.seal-bubble::before{content:"";position:absolute;left:12px;top:5px;width:16px;height:7px;border-radius:50%;background:rgba(255,255,255,.55);transform:rotate(-18deg);filter:blur(.4px)}
+.sb-text{position:relative}
+.sb-d{position:absolute;border-radius:50%;border:1.5px solid rgba(225,252,255,.55);
+  background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.5),rgba(255,255,255,.08) 55%,rgba(127,240,216,.1));box-shadow:inset 0 0 4px rgba(255,255,255,.2)}
+.sb-d1{width:12px;height:12px;left:-10px;bottom:-4px}
+.sb-d2{width:7px;height:7px;left:-20px;bottom:-12px}
+.seal-bubble.show{opacity:1;transform:none;animation:sbFloat 3.2s ease-in-out .45s infinite}
+.seal-bubble.out{opacity:0;transform:translateY(-16px) scale(1.12);transition:opacity .35s ease,transform .4s ease-out}
+@keyframes sbFloat{0%,100%{translate:0 0}50%{translate:0 -4px}}
+@media (prefers-reduced-motion:reduce){.seal-bubble{transition:opacity .2s}.seal-bubble,.seal-bubble.show,.seal-bubble.out{transform:none;animation:none}#home-seal-wrap.poke .home-seal,#home-seal-wrap[class*="m-"] .home-seal,#home-seal-wrap.talking .s-fl,#home-seal-wrap.talking .s-fr{animation:none}}
 @media (max-height:560px){.home-seal{width:90px}.tagline{display:none}}
 /* ===================== Design layer ===================== */
 :root{--kelp:1;--fish:.6;--glow:.08}
@@ -474,7 +518,10 @@ form.answer{display:flex;gap:8px}
 <main id="app">
   <!-- ================= HOME ================= -->
   <section id="home" class="screen scroll" aria-labelledby="home-title">
-    <div id="home-seal-wrap"></div>
+    <div class="seal-stage">
+      <div id="home-seal-wrap" role="button" tabindex="0" aria-label="Tap Séamus"></div>
+      <div class="seal-bubble" id="seal-bubble" aria-live="polite"><span class="sb-text"></span><i class="sb-d sb-d1"></i><i class="sb-d sb-d2"></i></div>
+    </div>
     <h1 class="logo" id="home-title">Craicillion</h1>
     <div class="knot" style="width:200px"></div>
     <p class="tagline">Dive off the Forty Foot. Say the answer nobody else would.</p>
@@ -12853,8 +12900,8 @@ function seamusSVG(cls = "") {
     <stop offset=".6667" stop-color="#ff883e"/><stop offset="1" stop-color="#ff883e"/>
   </linearGradient></defs>
   <g>
-    <ellipse cx="38" cy="98" rx="16" ry="7" fill="#71879b" transform="rotate(-30 38 98)"/>
-    <ellipse cx="104" cy="98" rx="16" ry="7" fill="#71879b" transform="rotate(30 104 98)"/>
+    <g class="s-fl"><ellipse cx="38" cy="98" rx="16" ry="7" fill="#71879b" transform="rotate(-30 38 98)"/></g>
+    <g class="s-fr"><ellipse cx="104" cy="98" rx="16" ry="7" fill="#71879b" transform="rotate(30 104 98)"/></g>
     <path d="M70 128c-9 0-14 6-22 8 4-6 6-10 6-14h32c0 4 2 8 6 14-8-2-13-8-22-8z" fill="#71879b"/>
     <ellipse cx="70" cy="88" rx="34" ry="38" fill="#8fa3b5"/>
     <ellipse cx="70" cy="98" rx="22" ry="25" fill="#c9d6e0"/>
@@ -12873,6 +12920,7 @@ function seamusSVG(cls = "") {
     <ellipse cx="70" cy="68" rx="12" ry="8.5" fill="#b5c4d1"/>
     <ellipse cx="70" cy="64.5" rx="4.6" ry="3.4" fill="#14202b"/>
     <path d="M64 70.5c2 2.4 4.4 2.4 6 0 1.6 2.4 4 2.4 6 0" stroke="#14202b" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <g class="s-mouth"><ellipse cx="70" cy="74.5" rx="4.2" ry="3.6" fill="#3b1521"/><ellipse cx="70" cy="76.6" rx="2.6" ry="1.4" fill="#ff8fa3"/></g>
     <circle cx="48" cy="68" r="5" fill="#ff8fa3" opacity=".45"/><circle cx="92" cy="68" r="5" fill="#ff8fa3" opacity=".45"/>
     <path d="M58 67l-16-3M58 70l-16 1M82 67l16-3M82 70l16 1" stroke="#e7eef3" stroke-width="1.3" stroke-linecap="round" opacity=".85"/>
   </g>
@@ -13143,6 +13191,7 @@ function makeBubbles() {
 function show(id) {
   document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === id));
   if (id !== "game") { $("#answer").blur(); stopTimer(); phase = "idle"; }
+  if (id !== "home") { const sb = $("#seal-bubble"); if (sb) sb.classList.remove("show", "out"); const sw = $("#home-seal-wrap"); if (sw) sw.classList.remove("talking"); }
   if (id !== "rarer" && typeof rrStop === "function") { rrStop(); if (rr && rr.phase !== "over") rr.phase = "idle"; }
 }
 function renderHome() {
@@ -13617,6 +13666,50 @@ function rarerShareText() {
   return `Craicillion · Which is Rarer? 🦭\n🔥 ${rr.streak} in a row${rr.streak >= rr.best && rr.streak > 0 ? " (personal best!)" : ""}\n${shown}❌\n${SHARE_URL}`;
 }
 
+/* ---------- Séamus says ---------- */
+const SEAMUS_LINES = [
+  "The state of ya!", "You're some tulip.", "Wreckin' me head waiting here.", "You haven't a notion, have ya?",
+  "Look at the head on ya.", "You're about as sharp as a beach ball.", "Ya chancer.", "Ya gobdaw.",
+  "Ah sure look, it'll be grand.", "Story horse?", "C'mere till I tell ya…", "Gowan ya good thing!",
+  "Brrr. The Forty Foot's fierce bracing.", "Me flippers are banjaxed.", "I'd murder a 99 now.", "I once raced the ferry to Holyhead. I won.",
+];
+const seamus = { bag: [], last: null, hide: 0, next: 0, pop: 0, move: 0, lastMove: "" };
+const SEAMUS_MOVES = ["hop", "wiggle", "spin", "lean", "nod", "shimmy"];
+function seamusLine() {
+  if (!seamus.bag.length) {
+    seamus.bag = SEAMUS_LINES.slice().sort(() => Math.random() - .5);
+    if (seamus.bag[seamus.bag.length - 1] === seamus.last) seamus.bag.unshift(seamus.bag.pop());
+  }
+  return (seamus.last = seamus.bag.pop());
+}
+function seamusSay() {
+  const b = $("#seal-bubble");
+  if (!b || !$("#home").classList.contains("active")) return;
+  clearTimeout(seamus.hide); clearTimeout(seamus.pop);
+  b.classList.remove("show", "out"); void b.offsetWidth;
+  b.querySelector(".sb-text").textContent = seamusLine(); b.classList.add("show");
+  const w = $("#home-seal-wrap"), others = SEAMUS_MOVES.filter((m) => m !== seamus.lastMove), moves = others.length ? others : SEAMUS_MOVES;
+  const mv = moves[Math.floor(Math.random() * moves.length)]; seamus.lastMove = mv;
+  clearTimeout(seamus.move);
+  w.classList.remove("poke", "talking", ...SEAMUS_MOVES.map((m) => "m-" + m)); void w.offsetWidth;
+  w.classList.add("talking", "m-" + mv);
+  seamus.move = setTimeout(() => w.classList.remove("m-" + mv), 1900);
+  seamus.hide = setTimeout(seamusPop, 4600);
+}
+function seamusPop() {
+  const b = $("#seal-bubble"); if (!b || !b.classList.contains("show")) return;
+  b.classList.add("out"); b.classList.remove("show");
+  const w = $("#home-seal-wrap"); if (w) w.classList.remove("talking");
+  seamus.pop = setTimeout(() => b.classList.remove("out"), 420);
+}
+function seamusLoop(first) {
+  clearTimeout(seamus.next);
+  seamus.next = setTimeout(() => { if (!document.hidden) seamusSay(); seamusLoop(); }, first ? 2200 : 9000 + Math.random() * 5000);
+}
+function seamusPoke() {
+  seamusSay(); seamusLoop();
+}
+
 /* ---------- Stats ---------- */
 const slimResults = (rs) => rs.map((r) => ({ id: r.id, a: r.a, tier: r.tier, pts: r.pts, status: r.status, input: r.input, tries: r.tries || [] }));
 function recordArchive() {
@@ -13723,6 +13816,9 @@ function init() {
   $("#res-home").onclick = renderHome;
   $("#share-btn").onclick = () => share();
   $("#rarer-btn").onclick = startRarer;
+  $("#home-seal-wrap").onclick = seamusPoke;
+  $("#home-seal-wrap").onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); seamusPoke(); } };
+  seamusLoop(true);
   $("#rr-a").onclick = () => rrChoose(0); $("#rr-b").onclick = () => rrChoose(1);
   $("#rr-again").onclick = startRarer;
   $("#rr-home").onclick = () => { rrStop(); renderHome(); };
