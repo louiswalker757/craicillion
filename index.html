@@ -143,6 +143,16 @@ button,input{font:inherit;color:inherit}
 .about h2{font-size:.95rem;margin:0 0 6px;color:var(--ink)}
 .about p{margin:0 0 8px}
 .home-foot{font-size:.82rem;color:var(--muted);margin-top:4px}
+.fb-link{font-size:.84rem;color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(3,22,38,.3)}
+.fb-link b{color:var(--accent)}
+.fb-link:hover,.fb-link:focus-visible{border-color:rgba(127,240,216,.6);outline:none}
+.fb-card{display:flex;align-items:center;gap:12px;padding:14px 16px;flex:none}
+.fb-card-t{flex:1;display:flex;flex-direction:column;gap:2px;text-align:left}
+.fb-card-t span{font-size:.82rem;color:var(--muted);line-height:1.35}
+.fb-btn{flex:none;padding:10px 14px;font-size:.88rem;text-decoration:none}
+.fb-inline{color:var(--accent)}
+.res-report{grid-column:1/-1;justify-self:start;font-size:.76rem;color:var(--muted);text-decoration:underline;text-decoration-color:rgba(127,240,216,.5);text-underline-offset:3px;margin-top:2px}
+.res-report:hover{color:var(--accent)}
 /* ---------- Game ---------- */
 #game{gap:10px}
 .g-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:600}
@@ -748,6 +758,7 @@ body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
       </div>
     </div>
     <p class="home-foot" id="home-foot"></p>
+    <a class="fb-link" id="home-feedback" href="#">💌 Feedback or ideas? <b>Write to Séamus</b></a>
     <section class="about" aria-labelledby="about-title">
       <h2 id="about-title">What is Craicillion?</h2>
       <p>Craicillion is a free daily word game for Ireland. Every day there's a new dive of 7 prompts, the same for everyone: name an Irish county, a packet of crisps, a DART stop, a GAA county nickname, a Leaving Cert subject and loads more. You get 25 seconds of air for each one.</p>
@@ -858,6 +869,10 @@ body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
         <button class="btn btn-ghost" id="res-stats">Stats</button>
       </div>
     </div>
+    <div class="card fb-card">
+      <div class="fb-card-t"><b>💌 Write to Séamus</b><span>Did a right answer get rejected? Got an idea for a category? Tell us!</span></div>
+      <a class="btn btn-ghost fb-btn" id="res-feedback" href="#">Send feedback</a>
+    </div>
     <div style="height:8px;flex:none"></div>
   </section>
 </main>
@@ -880,6 +895,7 @@ body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
     <h3 style="margin:16px 0 4px;font-size:1rem">Landmarks on the way down</h3>
     <div class="landmarks" id="lm-table"></div>
     <p class="muted" style="font-size:.88rem">One scored dive a day; it rolls over at midnight, Irish time. <b>Infinite</b> is endless practice: dive 7 prompts, surface, then keep going as long as you like. It doesn't touch your stats. Missed a day? Play any past dive from the <b>Archive</b>. And for a limited time, try <b>Which is Rarer?</b>: two answers from a past dive, tap the rarer one, and see how long a streak you can build.</p>
+    <p class="muted" style="font-size:.88rem">Spotted a wrong answer, a missing one, or have an idea? Email Séamus at <a class="fb-inline" href="mailto:craicillion@gmail.com?subject=Craicillion%20feedback">craicillion@gmail.com</a>.</p>
     <button class="btn btn-primary" data-close style="width:100%;margin-top:6px">Grand, got it</button>
   </div>
 </div>
@@ -13949,6 +13965,7 @@ function renderHome() {
   tr.hidden = !(daily.done && trec);
   if (daily.done && trec) tr.innerHTML = `<span>${fmtM(trec.points * 10)} · ${esc(landmarkFor(trec.points * 10).name)}</span><span class="tiles">${trec.tiers.map((t) => tile(TIERS[t] ? t : null)).join("")}</span>`;
   applyTimeOfDay();
+  $("#home-feedback").href = mailto(`Craicillion feedback (Craicillion #${daily.dive})`, "Hi Séamus,\n\n");
   updateCountdowns(); renderRarerFeature();
   shownDepth = 0; setSea(0);
   show("home");
@@ -14289,10 +14306,12 @@ function renderResults() {
     const ans = r.status === "ok" ? `<span class="res-a">${esc(r.a || "—")}</span>`
       : `<span class="res-a miss">Out of air${r.tries && r.tries.length ? ` · tried ${r.tries.map(esc).join(", ")}` : ""}</span>`;
     return `<li><span class="res-q">${esc(p ? p.prompt : r.id)}</span>${ans}<span class="res-right">${t ? `<span class="badge ${r.tier}">${icon(r.tier)} ${esc(t.name)}</span>` : `<span class="badge miss">${icon("miss")} Miss</span>`}<b>${r.pts}</b></span>
+      ${p && r.tries && r.tries.length ? `<a class="res-report" href="${esc(mailto(`Missing answer: ${p.prompt}`, `Hi Séamus,\n\nI think one of these should count for "${p.prompt}":\n${r.tries.map((t) => "- " + t).join("\n")}\n\n`))}">Should one of your guesses have counted? Tell Séamus</a>` : ""}
       ${p ? `<details class="all" data-id="${esc(p.id)}" data-mine="${esc(r.a || "")}"><summary>See all ${p.answers.length} answers</summary><div class="all-body"></div></details>` : ""}</li>`;
   }).join("");
   const rl = $("#res-list"); rl.classList.toggle("stagger", !reduceMotion); rl.querySelectorAll("li").forEach((li2, k) => (li2.style.animationDelay = (0.5 + k * 0.07) + "s"));
   $("#res-list").querySelectorAll("details.all").forEach((d) => d.addEventListener("toggle", () => { if (d.open) fillAllAnswers(d); }));
+  $("#res-feedback").href = feedbackLink();
   $("#share-btn").style.display = mode !== "free" ? "" : "none";
   $("#res-free").textContent = mode === "free" ? "Keep diving" : "Infinite";
   $("#res-free").classList.toggle("btn-primary", mode === "free"); $("#res-free").classList.toggle("btn-ghost", mode !== "free");
@@ -14517,6 +14536,15 @@ function rarerShareText() {
   return `Craicillion · Which is Rarer? 🦭\n🔥 ${rr.streak} in a row${rr.streak >= rr.best && rr.streak > 0 ? " (personal best!)" : ""}\n${shown}❌\n${SHARE_URL}`;
 }
 
+/* ---------- Feedback (mailto) ---------- */
+const FEEDBACK_EMAIL = "craicillion@gmail.com";
+function mailto(subject, body = "") {
+  return `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(subject)}${body ? `&body=${encodeURIComponent(body)}` : ""}`;
+}
+function feedbackLink() {
+  const g = typeof cur === "function" && cur(), where = mode === "free" ? "Infinite" : g && g.dive ? `Craicillion #${g.dive}` : `Craicillion #${diveNumber(todayKey())}`;
+  return mailto(`Craicillion feedback (${where})`, "Hi Séamus,\n\n");
+}
 /* ---------- Séamus says ---------- */
 const SEAMUS_LINES = [
   "You're some tulip.", "Wreckin' me head waiting here.", "You haven't a notion, have ya?", "Look at the head on ya.",
