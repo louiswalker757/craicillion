@@ -139,7 +139,13 @@ button,input{font:inherit;color:inherit}
 .home-row .btn{padding:11px 4px;font-size:.82rem;flex-direction:column;gap:2px;border-radius:16px}
 .home-row .btn svg{width:22px;height:22px}
 .countdown{font-variant-numeric:tabular-nums;font-weight:700}
-.about{max-width:420px;margin:18px auto 8px;text-align:left;font-size:.85rem;line-height:1.55;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+.about{max-width:420px;width:100%;margin:6px auto 8px;text-align:left;font-size:.85rem;line-height:1.55;color:var(--muted)}
+.about summary{list-style:none;cursor:pointer;text-align:center;font-size:.78rem;font-weight:700;color:var(--muted);opacity:.8;padding:6px}
+.about summary::-webkit-details-marker{display:none}
+.about summary::after{content:" ▾"}
+.about[open] summary::after{content:" ▴"}
+.about[open] summary{margin-bottom:8px}
+.about summary:hover{opacity:1;color:var(--ink)}
 .about h2{font-size:.95rem;margin:0 0 6px;color:var(--ink)}
 .about p{margin:0 0 8px}
 .home-foot{font-size:.82rem;color:var(--muted);margin-top:4px}
@@ -549,6 +555,11 @@ body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
 .today-no{grid-row:2;font-size:1.25rem;font-weight:800}
 .today-date{grid-row:1 / span 2;grid-column:2;align-self:center;font-size:.85rem;color:var(--muted);text-align:right}
 .today-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.today-top{padding:10px 16px}
+.today-top .today-stats{border-top:0;padding-top:0}
+.today-more{margin-top:4px}
+.today-more .week{border-top:0;padding-top:2px}
+.today-more .today-result+.week{border-top:1px solid var(--line);padding-top:10px}
 .today-stats div{text-align:center}
 .today-stats b{display:block;font-size:1.05rem;font-variant-numeric:tabular-nums}
 .today-stats span{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
@@ -601,7 +612,48 @@ body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
 .rr-f-best:empty{display:none}
 #rarer,#realfake{gap:10px}
 #realfake{position:relative}
-.mode-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.mode-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.mode-row .rr-feature{padding:28px 10px 10px!important}
+.mode-row .rr-f-text b{font-size:.86rem!important}
+.mode-row .rr-f-text small{font-size:.68rem!important;line-height:1.25}
+.mode-row .rr-f-icons{transform:scale(.88);transform-origin:left center}
+.mode-row .ltm-ribbon{right:6px!important;font-size:.46rem!important;padding:4px 6px 5px!important;letter-spacing:.08em!important}
+.mode-row .ltm-ribbon .ltm-dot{width:5px;height:5px}
+.mini-feature{border-color:rgba(244,201,93,.45);background:linear-gradient(135deg,rgba(244,201,93,.18),rgba(74,168,255,.12) 70%,rgba(255,255,255,.04)),var(--glass)}
+.mini-ico{display:grid;grid-template-columns:repeat(3,9px);gap:2px;padding:3px;border-radius:5px;background:#04202e}
+.mini-ico i{width:9px;height:9px;background:#fff;border-radius:1.5px}.mini-ico i.b{background:#04202e}
+#mini{gap:10px;position:relative}
+.mini-time{font-variant-numeric:tabular-nums;font-size:1.25rem}
+.mini-wrap{position:relative;flex:none;display:flex;justify-content:center}
+.mini-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr));gap:0;width:min(100%,46vh,360px);aspect-ratio:1;border:3px solid #04202e;border-radius:10px;overflow:hidden;background:#04202e;box-shadow:0 14px 34px -14px rgba(0,0,0,.6)}
+.mc{position:relative;min-width:0;min-height:0;overflow:hidden;background:#fff;border:1px solid #9fb3bd;display:grid;place-items:center;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.mc.blk{background:#04202e;cursor:default;border-color:#04202e}
+.mc .n{position:absolute;left:4px;top:2px;font-size:clamp(.55rem,2.4vw,.72rem);font-weight:700;color:#334}
+.mc .l{font-size:min(7.4vw,4.2vh,2.2rem);font-weight:800;color:#04202e;text-transform:uppercase;line-height:1}
+.mc.word{background:#bfeefe}
+.mc.sel{background:#ffd34d}
+.mc.bad .l{color:#e0324b}
+.mc.bad::after{content:"";position:absolute;right:3px;top:3px;width:7px;height:7px;border-radius:50%;background:#e0324b}
+.mc.rev .l{color:#1f6fd1}
+.mini-grid.solved .mc:not(.blk){background:#c9f7df;animation:miniWave .5s ease both}
+@keyframes miniWave{40%{transform:scale(1.08)}}
+.mini-input{position:absolute;opacity:0;width:1px;height:1px;left:50%;top:50%;border:0;padding:0;font-size:16px;pointer-events:none}
+.mini-cluebar{flex:none;display:grid;grid-template-columns:44px 1fr 44px;align-items:stretch;border-radius:14px;overflow:hidden;background:#bfeefe;color:#04202e;min-height:58px;box-shadow:0 8px 20px -10px rgba(0,0,0,.5)}
+.mini-arrow{appearance:none;border:0;background:rgba(4,32,46,.08);font-size:1.8rem;font-weight:700;color:#04202e;cursor:pointer}
+.mini-cur{display:flex;align-items:center;gap:10px;padding:8px 10px;font-weight:600;line-height:1.25;cursor:pointer}
+.mini-cur b{flex:none;font-weight:900}
+.mini-tools{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini-tools .btn{padding:9px;font-size:.88rem}
+.mini-clues{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px;text-align:left}
+.mini-clues h4{margin:0 0 6px;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.mini-clues ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.mini-clues li{font-size:.84rem;line-height:1.3;cursor:pointer;padding:3px 6px;border-radius:7px}
+.mini-clues li b{margin-right:6px}
+.mini-clues li.on{background:rgba(191,238,254,.18)}
+.mini-clues li.done{color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(255,255,255,.3)}
+.mini-done-big{font-family:'Uncial Antiqua',serif;font-size:1.6rem;color:var(--gold);margin-top:6px}
+#mini.scroll{overflow-y:auto}
+@media (max-height:700px){.mini-clues{display:none}}
 .mode-row .rr-feature{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:30px 12px 12px;min-width:0}
 .mode-row .rr-f-icons{grid-row:auto}
 .mode-row .rr-f-icons .tile{width:26px;height:26px}
@@ -759,14 +811,7 @@ body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
     <h1 class="logo" id="home-title">Craicillion</h1>
     <div class="logo-sub"><span class="knot"></span><span class="logo-sub-t">The daily Irish word game</span><span class="knot"></span></div>
     <p class="tagline">Dive off the Forty Foot. Say the answer nobody else would.</p>
-    <div class="today card">
-      <div class="today-main">
-        <span class="today-label">Today's dive<span class="today-greet" id="home-greet"></span></span>
-        <span class="today-no" id="home-dive">Craicillion #1</span>
-        <span class="today-date" id="home-date"></span>
-      </div>
-      <div class="today-result" id="home-today" hidden></div>
-      <div class="week" id="home-week" aria-label="Your last 7 days"></div>
+    <div class="today card today-top">
       <div class="today-stats">
         <div><b id="home-streak">0</b><span>Streak</span></div>
         <div><b id="home-best">0 m</b><span>Best</span></div>
@@ -779,14 +824,20 @@ body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
       <button class="rr-feature card" id="rarer-btn" aria-label="Which is Rarer? Limited time mode">
         <span class="ltm-ribbon" aria-hidden="true"><i class="ltm-dot"></i>Limited time</span>
         <span class="rr-f-icons" aria-hidden="true"><span class="rr-f-a"></span><span class="rr-f-vs">vs</span><span class="rr-f-b"></span></span>
-        <span class="rr-f-text"><b>Which is Rarer?</b><small>Two answers. Tap the rarer one.</small></span>
+        <span class="rr-f-text"><b>Which is Rarer?</b><small>Tap the rarer answer</small></span>
         <span class="rr-f-best" id="home-rr-best"></span>
       </button>
       <button class="rr-feature card rf-feature" id="realfake-btn" aria-label="Real or Fake? New mode">
         <span class="ltm-ribbon new" aria-hidden="true">New</span>
         <span class="rr-f-icons" aria-hidden="true"><span class="rf-chip real">✓</span><span class="rr-f-vs">or</span><span class="rf-chip fake">✗</span></span>
-        <span class="rr-f-text"><b>Real or Fake?</b><small>Three Irish places. One is made up.</small></span>
+        <span class="rr-f-text"><b>Real or Fake?</b><small>Spot the made-up place</small></span>
         <span class="rr-f-best" id="home-rf-best"></span>
+      </button>
+      <button class="rr-feature card mini-feature" id="mini-btn" aria-label="The Mini: daily Irish crossword">
+        <span class="ltm-ribbon new" aria-hidden="true">New</span>
+        <span class="rr-f-icons" aria-hidden="true"><span class="mini-ico"><i></i><i></i><i class="b"></i><i></i><i></i><i></i><i class="b"></i><i></i><i></i></span></span>
+        <span class="rr-f-text"><b>The Mini</b><small>Daily 5×5 crossword</small></span>
+        <span class="rr-f-best" id="home-mini-best"></span>
       </button>
       </div>
       <div class="home-row">
@@ -800,13 +851,23 @@ body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>Stats</button>
       </div>
     </div>
+    <div class="today card today-more">
+      <div class="today-main">
+        <span class="today-label">Today's dive<span class="today-greet" id="home-greet"></span></span>
+        <span class="today-no" id="home-dive">Craicillion #1</span>
+        <span class="today-date" id="home-date"></span>
+      </div>
+      <div class="today-result" id="home-today" hidden></div>
+      <div class="week" id="home-week" aria-label="Your last 7 days"></div>
+    </div>
     <p class="home-foot" id="home-foot"></p>
     <a class="fb-link" id="home-feedback" href="#">💌 Feedback or ideas? <b>Write to Séamus</b></a>
-    <section class="about" aria-labelledby="about-title">
+    <details class="about">
+      <summary>About Craicillion</summary>
       <h2 id="about-title">What is Craicillion?</h2>
       <p>Craicillion is a free daily word game for Ireland. Every day there's a new dive of 7 prompts, the same for everyone: name an Irish county, a packet of crisps, a DART stop, a GAA county nickname, a Leaving Cert subject and loads more. You get 25 seconds of air for each one.</p>
       <p>Everyone says Dublin. The rarer your answer, the more points you score and the deeper Séamus the seal dives, from the Forty Foot past Selkie Waters and Manannán's Hall, all the way to Tír fo Thuinn, the land under the wave. It's like Wordle, but Irish, and the obvious answer won't get you far. Share your squares with the group chat and come back tomorrow for a new dive.</p>
-    </section>
+    </details>
   </section>
 
   <!-- ================= GAME ================= -->
@@ -927,6 +988,38 @@ body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
     </div>
   </section>
 
+  <!-- ================= THE MINI ================= -->
+  <section id="mini" class="screen" aria-label="The Mini crossword">
+    <div class="g-head">
+      <button class="icon-btn" id="mini-quit" aria-label="Back to home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="rr-head"><b>The Mini</b><small id="mini-no">Craicillion Mini</small></div>
+      <div class="g-depth"><span class="mini-time" id="mini-time">0:00</span><small>Time</small></div>
+    </div>
+    <div class="mini-wrap">
+      <div class="mini-grid" id="mini-grid" role="grid" aria-label="Crossword grid"></div>
+      <input id="mini-input" class="mini-input" type="text" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" aria-label="Type a letter">
+    </div>
+    <div class="mini-cluebar" id="mini-cluebar">
+      <button class="mini-arrow" id="mini-prev" aria-label="Previous clue">‹</button>
+      <div class="mini-cur" id="mini-cur"><b id="mini-cur-n">1A</b><span id="mini-cur-t"></span></div>
+      <button class="mini-arrow" id="mini-next" aria-label="Next clue">›</button>
+    </div>
+    <div class="mini-tools"><button class="btn btn-ghost" id="mini-check">Check</button><button class="btn btn-ghost" id="mini-reveal">Reveal word</button></div>
+    <div class="card mini-clues" id="mini-clues"></div>
+    <div class="rr-over" id="mini-done" hidden>
+      <div class="card rr-over-card">
+        <div class="kicker">The Mini</div>
+        <div class="mini-done-big">Maith thú!</div>
+        <div class="rr-over-streak"><span id="mini-final">0:00</span><small id="mini-final-sub">solved</small></div>
+        <div class="rr-over-best" id="mini-done-note"></div>
+        <div class="rr-over-actions">
+          <button class="btn btn-primary" id="mini-share"><span class="ga">Roinn</span><small>Share your time</small></button>
+          <div class="row"><button class="btn btn-ghost" id="mini-view">See grid</button><button class="btn btn-ghost" id="mini-home">Home</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ================= RESULTS ================= -->
   <section id="results" class="screen scroll" aria-labelledby="res-title">
     <div class="card res-hero">
@@ -977,7 +1070,7 @@ body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
     <table class="tier-table" id="tier-table"></table>
     <h3 style="margin:16px 0 4px;font-size:1rem">Landmarks on the way down</h3>
     <div class="landmarks" id="lm-table"></div>
-    <p class="muted" style="font-size:.88rem">One scored dive a day; it rolls over at midnight, Irish time. <b>Infinite</b> is endless practice: dive 7 prompts, surface, then keep going as long as you like. It doesn't touch your stats. Missed a day? Play any past dive from the <b>Archive</b>. And for a limited time, try <b>Which is Rarer?</b>: two answers from a past dive, tap the rarer one, and see how long a streak you can build. New: <b>Real or Fake?</b> shows you three Irish place names. Two are real and Séamus made one up. Spot the fake!</p>
+    <p class="muted" style="font-size:.88rem">One scored dive a day; it rolls over at midnight, Irish time. <b>Infinite</b> is endless practice: dive 7 prompts, surface, then keep going as long as you like. It doesn't touch your stats. Missed a day? Play any past dive from the <b>Archive</b>. And for a limited time, try <b>Which is Rarer?</b>: two answers from a past dive, tap the rarer one, and see how long a streak you can build. New: <b>Real or Fake?</b> shows you three Irish place names. Two are real and Séamus made one up. Spot the fake! And <b>The Mini</b> is a new 5×5 crossword every day, with Irish clues and English answers. Can you beat your mates' time?</p>
     <p class="muted" style="font-size:.88rem">Spotted a wrong answer, a missing one, or have an idea? Email Séamus at <a class="fb-inline" href="mailto:craicillion@gmail.com?subject=Craicillion%20feedback">craicillion@gmail.com</a>.</p>
     <button class="btn btn-primary" data-close style="width:100%;margin-top:6px">Grand, got it</button>
   </div>
@@ -14052,6 +14145,7 @@ function show(id) {
   document.body.classList.toggle("in-game", id === "game");
   if (id !== "game" && document.body.classList.contains("submerged")) { document.documentElement.style.setProperty("--sub-dur", "1.2s"); document.documentElement.style.setProperty("--sub-ease", "cubic-bezier(.2,.7,.3,1)"); document.body.classList.remove("submerged"); }
   if (id !== "home") { const sb = $("#seal-bubble"); if (sb) sb.classList.remove("show", "out"); const sw = $("#home-seal-wrap"); if (sw) sw.classList.remove("talking"); }
+  if (id !== "mini" && typeof mini !== "undefined" && mini && !mini.solved && mini.t0) { miniStopClock(); miniSave(); }
   if (id !== "realfake" && typeof rfStop === "function") { rfStop(); if (rf && rf.phase !== "over") rf.phase = "idle"; }
   if (id !== "rarer" && typeof rrStop === "function") { rrStop(); if (rr && rr.phase !== "over") rr.phase = "idle"; }
 }
@@ -14082,7 +14176,7 @@ function renderHome() {
   if (daily.done && trec) tr.innerHTML = `<span>${fmtM(trec.points * 10)} · ${esc(landmarkFor(trec.points * 10).name)}</span><span class="tiles">${trec.tiers.map((t) => tile(TIERS[t] ? t : null)).join("")}</span>`;
   applyTimeOfDay();
   $("#home-feedback").href = mailto(`Craicillion feedback (Craicillion #${daily.dive})`, "Hi Séamus,\n\n");
-  updateCountdowns(); renderRarerFeature(); renderRealFakeFeature();
+  updateCountdowns(); renderRarerFeature(); renderRealFakeFeature(); renderMiniFeature();
   shownDepth = 0; setSea(0);
   show("home");
 }
@@ -14503,7 +14597,7 @@ function shareText() {
   return `Craicillion #${g.dive}${tag} 🦭\nDived ${m.toLocaleString("en-IE")}m — reached ${lm.name}\n${g.results.map((r) => (r.tier ? TIERS[r.tier].emoji : "❌")).join("")}\n${SHARE_URL}`;
 }
 async function share(text = shareText()) {
-  track(/Which is Rarer/.test(text) ? "share-rarer" : /Real or Fake/.test(text) ? "share-realfake" : "share");
+  track(/Which is Rarer/.test(text) ? "share-rarer" : /Real or Fake/.test(text) ? "share-realfake" : /Mini/.test(text) ? "share-mini" : "share");
   try { await navigator.clipboard.writeText(text); return toast("Copied! Paste it in the group chat 🦭"); } catch {}
   try { const ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
     document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); if (ok) return toast("Copied! Paste it in the group chat 🦭"); } catch {}
@@ -14813,6 +14907,134 @@ function realFakeShareText() {
   return `Craicillion · Real or Fake? 🦭\n🔥 ${rf.streak} Irish place names in a row${rf.streak >= rf.best && rf.streak > 0 ? " (personal best!)" : ""}\n${caught}\n${SHARE_URL}`;
 }
 
+/* =====================================================================
+   THE MINI: a daily 5x5 crossword (English answers, Irish clues)
+   ===================================================================== */
+const MINIS = [{"rows":["##SOD","#BONO","SAUCE","ERNE#","END##"],"a":{"1":"Lump of turf","4":"U2 frontman","5":"Red or brown, on your chips","6":"River and lough in Fermanagh","7":"Finish"},"d":{"1":"\"That's ___\" (no bother)","2":"\"___ upon a time…\"","3":"Female deer","4":"Farm building for hay","5":"\"___ you after!\""}},{"rows":["##MOT","#BONO","TRULY","EASY#","AYE##"],"a":{"1":"Dublin slang for a girlfriend","4":"Paul Hewson, to his fans","5":"Yours ___ (letter sign-off)","6":"\"Go ___ on the butter!\"","7":"\"Yes\", up North"},"d":{"1":"Computer clicker, or a cat's target","2":"Just","3":"Thing in Santa's sack","4":"Wicklow seaside town with a famous prom","5":"Barry's or Lyons"}},{"rows":["SOD##","EVEN#","CAVAN","#LINE","##LAW"],"a":{"1":"First ___ (turned at a groundbreaking)","4":"Not odd","6":"Ulster county known for its lakes","8":"Queue","9":"What a solicitor practises"},"d":{"1":"\"Hang on a ___!\"","2":"Egg shape","3":"\"Speak of the ___\"","5":"Granny","7":"Brand ___"}},{"rows":["GAA##","ARCH#","LATER","#NORE","##ROD"],"a":{"1":"Body that runs Croke Park (abbr.)","4":"Curved structure over a doorway","6":"\"See you ___!\"","8":"River through Kilkenny","9":"Fishing ___"},"d":{"1":"Lass","2":"Islands famous for their jumpers","3":"Barry Keoghan or Colin Farrell","5":"Cú Chulainn, for one","7":"Colour of a Cork jersey"}},{"rows":["##BOG","#BABE","MODEL","ONLY#","TOY##"],"a":{"1":"Peaty wetland where turf is cut","4":"Baby, or a looker","5":"Catwalk walker","6":"Sole","7":"Plaything"},"d":{"1":"Poorly","2":"Do as you're told","3":"Hair product","4":"U2 singer with the shades","5":"A Dub's other half, in slang"}},{"rows":["##MOT","#BEAR","FORTY","INCH#","TOY##"],"a":{"1":"\"Me ___\" (a Dubliner's girlfriend)","4":"Polar ___","5":"The ___ Foot (Dublin bathing spot)","6":"About 2.5 cm","7":"Plaything for a pup"},"d":{"1":"\"Have ___!\"","2":"Sworn promise","3":"Rugby score worth five points","4":"He sang \"With or Without You\"","5":"In good shape"}},{"rows":["##BOG","#SAVE","LOCAL","IDOL#","TAN##"],"a":{"1":"Where turf is cut","4":"Keeper's job","5":"Nearby, as a shop","6":"Pop star with screaming fans","7":"What you rarely get in an Irish summer"},"d":{"1":"Rashers are made of it","2":"Shape of a rugby ball","3":"Hair product","4":"___ bread","5":"Brilliant, in slang"}},{"rows":["##SOD","#TUNE","LANCE","ERNE#","DAY##"],"a":{"1":"Lump of turf","4":"Trad session piece","5":"Knight's weapon","6":"Fermanagh's great lough","7":"24 hours"},"d":{"1":"Rare Irish weather report","2":"One time","3":"Letter after C","4":"Hill of ___, seat of the High Kings","5":"Was out in front"}},{"rows":["##BIT","#TARA","BASIS","EXIST","NICHE"],"a":{"1":"Small piece","4":"Meath hill of the High Kings","5":"Foundation","6":"Be","7":"Specialised corner of the market"},"d":{"1":"Simple","2":"Like a jig or a fry","3":"Flavour","4":"Ride home from the airport","5":"___ Bulben (Sligo mountain)"}},{"rows":["LEE##","EARN#","ARROW","STORE","THREE"],"a":{"1":"River through Cork city","4":"Make money","6":"Archer's shot","8":"Shop","9":"Number of leaves on a shamrock"},"d":{"1":"Smallest amount","2":"Our planet","3":"Mistake","5":"Kilkenny's river","7":"Small, up North"}},{"rows":["#OVAL","#PINE","MERGE","ORAL#","TALE#"],"a":{"1":"Egg shape","5":"Christmas tree","6":"Join together, like lanes on the M50","7":"Irish ___ (Leaving Cert exam)","8":"Story"},"d":{"1":"Show at the Wexford festival","2":"Spreading like a TikTok","3":"Corner, in maths","4":"Cork's river","6":"Girlfriend, in Dublin slang"}},{"rows":["TEA##","HART#","ERROR","#NANA","##YET"],"a":{"1":"Barry's or Lyons","4":"Male deer","6":"Mistake","8":"Granny","9":"So far"},"d":{"1":"Most common word in English","2":"Make, as wages","3":"Range","5":"Sound quality","7":"Rodent"}},{"rows":["#SLIP","#CORE","BACON","ARAN#","RELY#"],"a":{"1":"Small mistake","5":"Centre of an apple","6":"Rasher meat","7":"___ jumper","8":"Depend"},"d":{"1":"Fright","2":"Nearby","3":"Rain on your wedding day, apparently","4":"Biro","6":"Chocolate ___"}},{"rows":["##TEA","#ARAN","EXACT","RICH#","ASK##"],"a":{"1":"\"Will you have a cup of ___?\"","4":"___ Islands","5":"Precise","6":"Loaded","7":"Enquire"},"d":{"1":"Train line","2":"Every one","3":"Busy little insect","4":"Line through a globe","5":"Period of history"}},{"rows":["##TEA","#SWAN","ALERT","GAEL#","OPT##"],"a":{"1":"Cuppa","4":"What the Children of Lir became","5":"On guard","6":"Irish person, poetically","7":"Choose (to)"},"d":{"1":"Post on X","2":"Lord","3":"Insect","4":"Smack","5":"In the past"}},{"rows":["##MOT","#BONO","OUNCE","FLEE#","FLY##"],"a":{"1":"Girlfriend, in Dublin","4":"U2's frontman","5":"Small weight","6":"Run away","7":"Pest at a summer barbecue"},"d":{"1":"Cash","2":"Single time","3":"This little piggy","4":"Male cow","5":"Not on"}},{"rows":["##SUE","#BANN","SOLID","PLATE","ADDED"],"a":{"1":"Take to court","4":"Northern river flowing from Lough Neagh","5":"Not liquid","6":"Dinner dish","7":"Put in extra"},"d":{"1":"Lettuce dish","2":"Come together","3":"Finished","4":"Brave, or naughty in Irish English","5":"Health resort"}},{"rows":["##GAA","#GIRL","NAVAL","EVEN#","TEN##"],"a":{"1":"Body that runs Croke Park (abbr.)","4":"Lass","5":"Of the navy","6":"Level","7":"Score out of ___"},"d":{"1":"Handed","2":"Inis Mór is one of these islands","3":"Everything","4":"Handed over","5":"Goalmouth mesh"}},{"rows":["LIT##","ACRE#","BOARD","#NINE","##LEE"],"a":{"1":"Brilliant, in slang","4":"Field measure","6":"Get on, as a bus","8":"Number after eight","9":"Cork's river"},"d":{"1":"Science room","2":"Legend","3":"Path","5":"Fermanagh's river","7":"Letter after C"}},{"rows":["##TEA","#CORN","PLANT","RISE#","OPT##"],"a":{"1":"Cuppa","4":"Popcorn base","5":"Factory, or greenery","6":"Go up","7":"Choose (for)"},"d":{"1":"Breakfast with butter","2":"Lough in Fermanagh","3":"Insect","4":"Video snippet","5":"Expert, for short"}},{"rows":["##LEE","#TORY","PHONE","RISE#","ONE##"],"a":{"1":"River in Cork","4":"Island off Donegal","5":"Mobile","6":"Go up","7":"Number"},"d":{"1":"Not tight","2":"Fermanagh's river","3":"Organ for seeing","4":"Skinny","5":"Expert, for short"}}];
+const K_MINI = "craicillion:mini";
+let mini = null;
+const miniNo = () => diveNumber(todayKey());
+const miniPuzzle = (n) => MINIS[(n - 1) % MINIS.length];
+const fmtT = (ms) => { const t = Math.floor(ms / 1000); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; };
+function miniSaved() { const s = store.get(K_MINI, {}); return s.date === todayKey() ? s : null; }
+function renderMiniFeature() { const s = miniSaved(); $("#home-mini-best").textContent = s && s.solved ? `✓ ${fmtT(s.time)}` : ""; }
+function miniLayout(rows) {
+  const cells = [], num = {}; let k = 0;
+  const open = (r, c) => r >= 0 && r < 5 && c >= 0 && c < 5 && rows[r][c] !== "#";
+  const words = [];
+  for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
+    if (!open(r, c)) continue;
+    const a = !open(r, c - 1) && open(r, c + 1), d = !open(r - 1, c) && open(r + 1, c);
+    if (a || d) { num[r * 5 + c] = ++k;
+      if (a) { const cs = []; for (let x = c; open(r, x); x++) cs.push(r * 5 + x); words.push({ dir: "A", n: k, cells: cs }); }
+      if (d) { const cs = []; for (let y = r; open(y, c); y++) cs.push(y * 5 + c); words.push({ dir: "D", n: k, cells: cs }); } }
+  }
+  words.sort((x, y) => (x.dir === y.dir ? x.n - y.n : x.dir === "A" ? -1 : 1));
+  return { num, words };
+}
+function startMini() {
+  track("mini-start");
+  const n = miniNo(), pz = miniPuzzle(n), L = miniLayout(pz.rows), saved = miniSaved();
+  mini = { n, pz, L, letters: saved && saved.letters ? saved.letters.slice() : Array(25).fill(""), rev: saved && saved.rev ? saved.rev.slice() : Array(25).fill(false),
+    elapsed: saved ? saved.elapsed || 0 : 0, solved: !!(saved && saved.solved), time: saved ? saved.time : 0, w: 0, pos: L.words[0].cells[0], t0: 0, iv: 0 };
+  $("#mini-no").textContent = `Craicillion Mini #${n}`;
+  $("#mini-done").hidden = true;
+  show("mini"); setSea(0);
+  miniRenderGrid(); miniRenderClues(); miniSelect(mini.pos, 0);
+  if (mini.solved) { $("#mini-grid").classList.add("solved"); $("#mini-time").textContent = fmtT(mini.time); miniShowDone(false); }
+  else { miniStartClock(); miniFocus(); }
+}
+function miniStartClock() { clearInterval(mini.iv); mini.t0 = Date.now(); const tick = () => { $("#mini-time").textContent = fmtT(mini.elapsed + Date.now() - mini.t0); }; tick(); mini.iv = setInterval(tick, 250); }
+function miniStopClock() { if (!mini || !mini.t0) return; clearInterval(mini.iv); mini.elapsed += Date.now() - mini.t0; mini.t0 = 0; }
+function miniSave() { store.set(K_MINI, { date: todayKey(), n: mini.n, letters: mini.letters, rev: mini.rev, elapsed: mini.elapsed + (mini.t0 ? Date.now() - mini.t0 : 0), solved: mini.solved, time: mini.time }); }
+function miniFocus() { const i = $("#mini-input"); i.value = "-"; i.focus({ preventScroll: true }); try { i.setSelectionRange(1, 1); } catch {} }
+function miniRenderGrid() {
+  const g = $("#mini-grid"); g.classList.remove("solved");
+  g.innerHTML = mini.pz.rows.join("").split("").map((ch, i) => ch === "#" ? `<div class="mc blk"></div>`
+    : `<div class="mc" data-i="${i}" role="gridcell">${mini.L.num[i] ? `<span class="n">${mini.L.num[i]}</span>` : ""}<span class="l"></span></div>`).join("");
+  g.querySelectorAll(".mc[data-i]").forEach((el) => el.addEventListener("pointerdown", (e) => { e.preventDefault(); const i = +el.dataset.i;
+    if (i === mini.pos) mini.w = miniOtherWord(i); miniSelect(i, mini.w); miniFocus(); }));
+  miniPaint();
+}
+function miniWordsAt(i) { return mini.L.words.map((w, k) => (w.cells.includes(i) ? k : -1)).filter((k) => k >= 0); }
+function miniOtherWord(i) { const ws = miniWordsAt(i); const cur = mini.L.words[mini.w]; const same = ws.find((k) => mini.L.words[k].dir !== cur.dir); return same !== undefined ? same : ws[0]; }
+function miniSelect(i, wIdx) {
+  const ws = miniWordsAt(i); if (!ws.length) return;
+  if (!ws.includes(wIdx)) { const cur = mini.L.words[mini.w]; const pref = ws.find((k) => cur && mini.L.words[k].dir === cur.dir); wIdx = pref !== undefined ? pref : ws[0]; }
+  mini.pos = i; mini.w = wIdx; miniPaint();
+}
+function miniPaint() {
+  const w = mini.L.words[mini.w];
+  document.querySelectorAll("#mini-grid .mc[data-i]").forEach((el) => { const i = +el.dataset.i;
+    el.querySelector(".l").textContent = mini.letters[i];
+    el.classList.toggle("word", w.cells.includes(i)); el.classList.toggle("sel", i === mini.pos); el.classList.toggle("rev", mini.rev[i]); });
+  const clue = (w.dir === "A" ? mini.pz.a : mini.pz.d)[w.n];
+  $("#mini-cur-n").textContent = `${w.n}${w.dir}`; $("#mini-cur-t").textContent = clue;
+  document.querySelectorAll("#mini-clues li").forEach((li) => { const k = +li.dataset.k, ww = mini.L.words[k];
+    li.classList.toggle("on", k === mini.w); li.classList.toggle("done", ww.cells.every((c) => mini.letters[c])); });
+}
+function miniRenderClues() {
+  const part = (dir, title) => `<div><h4>${title}</h4><ol>${mini.L.words.map((w, k) => w.dir === dir ? `<li data-k="${k}"><b>${w.n}</b>${esc((dir === "A" ? mini.pz.a : mini.pz.d)[w.n])}</li>` : "").join("")}</ol></div>`;
+  $("#mini-clues").innerHTML = part("A", "Across") + part("D", "Down");
+  document.querySelectorAll("#mini-clues li").forEach((li) => li.addEventListener("click", () => { const k = +li.dataset.k, w = mini.L.words[k];
+    const first = w.cells.find((c) => !mini.letters[c]); miniSelect(first !== undefined ? first : w.cells[0], k); miniFocus(); }));
+}
+function miniMoveWord(step) {
+  const N = mini.L.words.length; let k = mini.w;
+  for (let t = 0; t < N; t++) { k = (k + step + N) % N; const w = mini.L.words[k], e = w.cells.find((c) => !mini.letters[c]);
+    if (e !== undefined || t === N - 1) { miniSelect(e !== undefined ? e : w.cells[0], k); return; } }
+}
+function miniType(ch) {
+  if (mini.solved) return;
+  const i = mini.pos; if (!mini.rev[i]) mini.letters[i] = ch; $("#mini-grid").querySelector(`[data-i="${i}"]`).classList.remove("bad");
+  const w = mini.L.words[mini.w], at = w.cells.indexOf(i);
+  const nextEmpty = w.cells.slice(at + 1).find((c) => !mini.letters[c]);
+  if (nextEmpty !== undefined) miniSelect(nextEmpty, mini.w);
+  else if (at < w.cells.length - 1 && w.cells.slice(at + 1).some((c) => !mini.letters[c]) === false && w.cells.every((c) => mini.letters[c])) miniMoveWord(1);
+  else if (at < w.cells.length - 1) miniSelect(w.cells[at + 1], mini.w);
+  else miniMoveWord(1);
+  miniPaint(); miniSave(); miniCheckDone();
+}
+function miniBack() {
+  if (mini.solved) return;
+  const i = mini.pos, w = mini.L.words[mini.w], at = w.cells.indexOf(i);
+  if (mini.letters[i] && !mini.rev[i]) mini.letters[i] = "";
+  else if (at > 0) { const p = w.cells[at - 1]; if (!mini.rev[p]) mini.letters[p] = ""; miniSelect(p, mini.w); }
+  miniPaint(); miniSave();
+}
+function miniCheckDone() {
+  const sol = mini.pz.rows.join("");
+  if (mini.letters.some((l, i) => sol[i] !== "#" && !l)) return;
+  if (mini.letters.every((l, i) => sol[i] === "#" || l === sol[i])) {
+    miniStopClock(); mini.solved = true; mini.time = mini.elapsed; miniSave(); track("mini-solve");
+    $("#mini-time").textContent = fmtT(mini.time); $("#mini-input").blur();
+    const g = $("#mini-grid"); g.classList.add("solved"); g.querySelectorAll(".mc:not(.blk)").forEach((el, k) => (el.style.animationDelay = k * 0.03 + "s"));
+    if (!reduceMotion) { const r = g.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2, ["#f4c95d", "#3fd398", "#ffffff", "#4aa8ff"], 34, r.width * .7, 1400); }
+    setTimeout(() => miniShowDone(true), 900);
+  } else toast("Not quite… something's wrong. Try Check!");
+}
+function miniShowDone(fresh) {
+  $("#mini-final").textContent = fmtT(mini.time);
+  const helped = mini.rev.some(Boolean);
+  $("#mini-final-sub").textContent = helped ? "solved (with a wee bit of help)" : "solved";
+  $("#mini-done-note").textContent = `Come back tomorrow for Mini #${mini.n + 1}.`;
+  $("#mini-done").hidden = false;
+}
+function miniShareText() {
+  const helped = mini.rev.some(Boolean);
+  return `Craicillion Mini #${mini.n} 🦭\n🧩 Solved in ${fmtT(mini.time)}${helped ? " (with a wee bit of help)" : ""}\n${SHARE_URL}`;
+}
+function miniCheck() {
+  const sol = mini.pz.rows.join(""); let bad = 0;
+  document.querySelectorAll("#mini-grid .mc[data-i]").forEach((el) => { const i = +el.dataset.i, wrong = mini.letters[i] && mini.letters[i] !== sol[i]; el.classList.toggle("bad", !!wrong); if (wrong) bad++; });
+  toast(bad ? `${bad} wrong letter${bad > 1 ? "s" : ""} marked in red` : "All good so far!");
+}
+function miniReveal() {
+  if (mini.solved) return; const sol = mini.pz.rows.join(""), w = mini.L.words[mini.w];
+  w.cells.forEach((c) => { if (mini.letters[c] !== sol[c]) { mini.letters[c] = sol[c]; mini.rev[c] = true; } });
+  miniPaint(); miniSave(); miniCheckDone(); if (!mini.solved) miniMoveWord(1), miniPaint();
+}
+
 /* ---------- Stats ---------- */
 const slimResults = (rs) => rs.map((r) => ({ id: r.id, a: r.a, tier: r.tier, pts: r.pts, status: r.status, input: r.input, tries: r.tries || [] }));
 function recordArchive() {
@@ -14925,6 +15147,28 @@ function init() {
   $("#share-btn").onclick = () => share();
   $("#rarer-btn").onclick = startRarer;
   $("#realfake-btn").onclick = startRealFake;
+  $("#mini-btn").onclick = startMini;
+  $("#mini-quit").onclick = () => { renderHome(); };
+  $("#mini-home").onclick = () => { renderHome(); };
+  $("#mini-view").onclick = () => { $("#mini-done").hidden = true; };
+  $("#mini-share").onclick = () => share(miniShareText());
+  $("#mini-check").onclick = () => { miniCheck(); miniFocus(); };
+  $("#mini-reveal").onclick = () => { miniReveal(); if (!mini.solved) miniFocus(); };
+  $("#mini-prev").onpointerdown = (e) => { e.preventDefault(); miniMoveWord(-1); miniFocus(); };
+  $("#mini-next").onpointerdown = (e) => { e.preventDefault(); miniMoveWord(1); miniFocus(); };
+  $("#mini-cur").onpointerdown = (e) => { e.preventDefault(); miniSelect(mini.pos, miniOtherWord(mini.pos)); miniFocus(); };
+  const mi = $("#mini-input");
+  mi.addEventListener("input", () => { if (!mini) return; const v = mi.value;
+    if (v.length < 1) miniBack(); else { const letters = v.replace(/-/g, "").toUpperCase().replace(/[^A-Z]/g, ""); for (const ch of letters) miniType(ch); }
+    mi.value = "-"; try { mi.setSelectionRange(1, 1); } catch {} });
+  mi.addEventListener("keydown", (e) => { if (!mini) return; const w = mini.L.words[mini.w];
+    const mv = { ArrowRight: [0, 1], ArrowLeft: [0, -1], ArrowDown: [1, 0], ArrowUp: [-1, 0] }[e.key];
+    if (mv) { e.preventDefault(); const want = mv[0] ? "D" : "A";
+      if (w.dir !== want) { const o = miniOtherWord(mini.pos); if (mini.L.words[o].dir === want) return miniSelect(mini.pos, o); }
+      let r = Math.floor(mini.pos / 5) + mv[0], c = (mini.pos % 5) + mv[1];
+      while (r >= 0 && r < 5 && c >= 0 && c < 5) { if (mini.pz.rows[r][c] !== "#") return miniSelect(r * 5 + c, mini.w); r += mv[0]; c += mv[1]; } return; }
+    if (e.key === "Tab" || e.key === "Enter") { e.preventDefault(); miniMoveWord(e.shiftKey ? -1 : 1); }
+    if (e.key === " ") { e.preventDefault(); miniSelect(mini.pos, miniOtherWord(mini.pos)); } });
   document.querySelectorAll(".rf-opt").forEach((b) => (b.onclick = () => rfChoose(+b.dataset.i)));
   $("#rf-again").onclick = startRealFake;
   $("#rf-home").onclick = () => { rfStop(); renderHome(); };
@@ -14974,7 +15218,7 @@ function init() {
   if (!store.get("craicillion:seen-howto", false)) { store.set("craicillion:seen-howto", true); setTimeout(() => openModal("howto"), 350); }
   renderHome();
 }
-window.__craicillion = { RF_REAL, RF_FAKE, rfCur: () => rf && rf.cur, phase: () => phase, rarerPool, percentileFor, norm, matchAnswer, promptIdsForDive, diveNumber, todayKey, dateForDive, PROMPTS, TIERS, shareText: () => shareText() };
+window.__craicillion = { MINIS, miniState: () => mini, RF_REAL, RF_FAKE, rfCur: () => rf && rf.cur, phase: () => phase, rarerPool, percentileFor, norm, matchAnswer, promptIdsForDive, diveNumber, todayKey, dateForDive, PROMPTS, TIERS, shareText: () => shareText() };
 init();
 </script>
 </body>
