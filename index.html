@@ -24,6 +24,9 @@
 <link rel="canonical" href="https://craicillion.ie/">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <meta name="apple-mobile-web-app-title" content="Craicillion">
 <meta name="application-name" content="Craicillion">
 <script type="application/ld+json">
@@ -62,12 +65,12 @@ button,input{font:inherit;color:inherit}
 .beams{position:absolute;inset:0 0 25% 0;opacity:calc(var(--rays) * .9);transition:opacity 1.4s ease;
   -webkit-mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.6) 45%,transparent 95%);mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.6) 45%,transparent 95%)}
 .beams i{position:absolute;top:-8%;height:115%;left:var(--x);width:var(--w);transform-origin:50% 0;transform:rotate(var(--r));
-  background:linear-gradient(180deg,rgba(255,253,225,.30),rgba(255,253,225,.10) 45%,rgba(255,253,225,0) 85%);
+  background:linear-gradient(180deg,rgba(var(--sun),.30),rgba(var(--sun),.10) 45%,rgba(var(--sun),0) 85%);
   clip-path:polygon(38% 0,62% 0,100% 100%,0 100%);mix-blend-mode:screen;animation:beam var(--d) ease-in-out infinite alternate}
 @keyframes beam{0%{opacity:.3;transform:rotate(var(--r)) translateX(-14px)}100%{opacity:1;transform:rotate(calc(var(--r) + 2.5deg)) translateX(14px)}}
 @keyframes sway{from{transform:translateX(-3%) skewX(-2deg)}to{transform:translateX(3%) skewX(2deg)}}
 .surface{position:absolute;left:0;right:0;top:0;height:min(42vh,340px);opacity:calc(var(--rays) * .85);transition:opacity 1.4s;
-  background:radial-gradient(38% 55% at 50% 0,rgba(255,252,225,.42),rgba(255,252,225,.12) 45%,transparent 70%),
+  background:radial-gradient(38% 55% at 50% 0,rgba(var(--sun),.42),rgba(var(--sun),.12) 45%,transparent 70%),
              radial-gradient(90% 30% at 50% 0,rgba(210,255,248,.22),transparent 75%)}
 .waves{position:absolute;left:0;right:0;top:0;height:46px;overflow:hidden;opacity:calc(var(--rays) * .9);transition:opacity 1.2s ease,transform 1.4s cubic-bezier(.5,0,.3,1)}
 .wave{position:absolute;left:0;top:0;width:calc(100% + 640px);height:100%;background-repeat:repeat-x;background-size:640px 100%}
@@ -92,7 +95,8 @@ button,input{font:inherit;color:inherit}
 /* ---------- App frame (pinned to the *visual* viewport so the keyboard never hides the input) ---------- */
 #app{position:fixed;left:0;right:0;top:var(--vvt);height:var(--vvh);z-index:1;display:flex;justify-content:center}
 .screen{display:none;width:100%;max-width:560px;height:100%;padding:max(14px,env(safe-area-inset-top)) 16px max(14px,env(safe-area-inset-bottom));flex-direction:column}
-.screen.active{display:flex}
+.screen.active{display:flex;animation:screenIn .38s cubic-bezier(.2,.8,.3,1)}
+@keyframes screenIn{from{opacity:0;transform:translateY(10px)}}
 .scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 /* ---------- Common bits ---------- */
 .logo{font-family:'Uncial Antiqua',serif;font-weight:400;letter-spacing:.01em;line-height:1;margin:0;
@@ -428,6 +432,80 @@ body.in-game .scene-snow{opacity:.55}
 .sb-speck{fill:#5fb3ad;opacity:.25}
 .sway{transform-origin:50% 100%;transform-box:fill-box;animation:kelp 6s ease-in-out infinite alternate}
 @keyframes kelp{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+/* ===================== Home hero ===================== */
+.s-eyes{transform-box:fill-box;transform-origin:50% 50%;animation:sBlink 5.2s infinite}
+@keyframes sBlink{0%,93%,100%{transform:scaleY(1)}95.5%{transform:scaleY(.08)}}
+.seal-stage{margin-top:4px;min-height:min(46vw,200px);align-items:center}
+.home-seal{width:min(47vw,204px);position:relative;filter:drop-shadow(0 14px 18px rgba(2,30,44,.35))}
+#home-seal-wrap{position:relative;z-index:1}
+.seal-halo{position:absolute;left:50%;top:50%;width:min(86vw,360px);aspect-ratio:1;transform:translate(-50%,-52%);pointer-events:none}
+.seal-halo i{position:absolute;display:block}
+.halo-rays{inset:0;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(var(--sun),.16) 0 7deg,transparent 7deg 22deg);
+  -webkit-mask-image:radial-gradient(circle,#000 18%,rgba(0,0,0,.5) 42%,transparent 68%);mask-image:radial-gradient(circle,#000 18%,rgba(0,0,0,.5) 42%,transparent 68%);animation:haloSpin 70s linear infinite}
+.halo-ring{inset:19%;border-radius:50%;background:radial-gradient(circle,rgba(var(--sun),.34),rgba(var(--sun),.10) 55%,transparent 72%);
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.22),0 0 0 9px rgba(255,255,255,.05),0 0 46px rgba(127,240,216,.28)}
+@keyframes haloSpin{to{transform:rotate(360deg)}}
+.hb{border-radius:50%;border:1.5px solid rgba(225,252,255,.6);background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.55),rgba(255,255,255,.05) 60%);animation:hbRise 5s ease-in infinite;opacity:0}
+.hb1{width:10px;height:10px;left:27%;top:58%}.hb2{width:6px;height:6px;left:70%;top:62%;animation-delay:-1.8s;animation-duration:6s}.hb3{width:13px;height:13px;left:76%;top:44%;animation-delay:-3.4s;animation-duration:7s}
+@keyframes hbRise{0%{transform:translateY(0) scale(.5);opacity:0}15%{opacity:.9}100%{transform:translate(8px,-130px) scale(1.1);opacity:0}}
+#home .logo{font-size:clamp(2.7rem,12.4vw,4.7rem);background:none;-webkit-background-clip:border-box;background-clip:border-box;color:inherit;margin-top:-4px;white-space:nowrap;
+  filter:drop-shadow(0 3px 0 #0a5560) drop-shadow(0 10px 16px rgba(0,20,30,.4))}
+.lg{display:inline-block;background:linear-gradient(180deg,#ffffff 12%,#d9fff6 48%,#7ff0d8 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:lgWave 3.4s ease-in-out infinite;animation-delay:calc(var(--i) * -.24s)}
+.lg.cap{font-size:1.28em;line-height:.8;margin-right:.01em;background:linear-gradient(180deg,#fff6cf 10%,#f7cf63 50%,#e59a2c 100%);-webkit-background-clip:text;background-clip:text}
+@keyframes lgWave{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-5px) rotate(-1.5deg)}}
+.logo-sub{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:340px;margin-top:-2px}
+.logo-sub .knot{flex:1;max-width:64px;opacity:.6}
+.logo-sub-t{font-size:.72rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#d7fff6;white-space:nowrap;text-shadow:0 1px 6px rgba(0,30,40,.5)}
+#home .tagline{max-width:330px;font-size:1rem;color:#d3ecee;text-shadow:0 1px 8px rgba(0,30,40,.35)}
+#home>.seal-stage,#home>.logo,#home>.logo-sub,#home>.tagline,#home>.today,#home>.home-actions{animation:heroIn .7s cubic-bezier(.2,.9,.3,1) both}
+#home>.logo{animation-delay:.08s}#home>.logo-sub{animation-delay:.16s}#home>.tagline{animation-delay:.22s}#home>.today{animation-delay:.3s}#home>.home-actions{animation-delay:.38s}
+@keyframes heroIn{from{opacity:0;transform:translateY(18px)}}
+@media (max-height:560px){.seal-halo{display:none}.seal-stage{min-height:0}}
+@media (prefers-reduced-motion:reduce){.lg,.halo-rays,.s-eyes{animation:none}.hb{display:none}}
+/* ===================== Polish layer ===================== */
+:root{--sun:255,253,225}
+/* week strip on the Today card */
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;border-top:1px solid var(--line);padding-top:10px}
+.wk{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.62rem;font-weight:700;letter-spacing:.06em;color:var(--muted)}
+.wk i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;border:1.5px dashed rgba(220,245,245,.28);font-style:normal;font-size:.7rem;color:#04202e}
+.wk.played i{border:0;background:radial-gradient(circle at 32% 28%,#fff,var(--wc) 55%);box-shadow:0 0 10px -2px var(--wc),inset 0 -2px 3px rgba(0,0,0,.18)}
+.wk.pre i{border-style:dotted;opacity:.35}
+.wk.now{color:var(--ink)}
+.wk.now:not(.played) i{border:2px solid var(--accent);animation:wkPulse 1.8s ease-out infinite}
+.wk.now.played i{outline:2px solid rgba(255,255,255,.75);outline-offset:2px}
+@keyframes wkPulse{0%{box-shadow:0 0 0 0 rgba(127,240,216,.55)}80%,100%{box-shadow:0 0 0 9px rgba(127,240,216,0)}}
+.today-result{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px;font-weight:800}
+.today-result[hidden]{display:none}
+.today-result .tiles{display:flex;gap:3px}.today-result .tile{width:20px;height:20px}
+.today-greet{font-family:var(--uncial,inherit);color:var(--muted);font-size:.8rem;font-weight:600;letter-spacing:.02em;text-transform:none;margin-left:6px}
+/* call-to-action glow on the start button while today's dive is waiting */
+.btn-primary.cta{animation:cta 2.4s ease-in-out infinite}
+@keyframes cta{0%,100%{box-shadow:0 6px 0 #1b7f78,0 12px 30px rgba(0,0,0,.25),0 0 0 0 rgba(143,245,223,.55)}50%{box-shadow:0 6px 0 #1b7f78,0 12px 30px rgba(0,0,0,.25),0 0 0 12px rgba(143,245,223,0)}}
+/* landmark medals */
+.medal{display:inline-block;width:64px;height:64px;flex:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
+.medal.locked{filter:grayscale(1) brightness(.7);opacity:.5}
+.res-medal{display:flex;justify-content:center;margin:8px 0 0}
+.res-medal .medal{width:88px;height:88px}
+.res-medal.stamp .medal{animation:stamp .7s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes stamp{0%{transform:scale(2.6) rotate(-24deg);opacity:0}55%{transform:scale(.92) rotate(4deg);opacity:1}100%{transform:none}}
+.res-tags{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+.res-tags:empty{display:none}
+.rtag{padding:5px 11px;border-radius:999px;font-size:.78rem;font-weight:800;animation:pop .5s cubic-bezier(.2,1.6,.4,1) both}
+.rtag.pb{color:#2a0e14;background:linear-gradient(90deg,#ffd27a,#f4a93d)}
+.rtag.lmk{color:#04202e;background:linear-gradient(90deg,#a6fbe7,#4fd1bd)}
+.rtag.st{color:var(--ink);background:rgba(255,120,80,.22);border:1px solid rgba(255,150,110,.5)}
+.res-list.stagger li{animation:rowIn .45s cubic-bezier(.2,.8,.3,1) both}
+@keyframes rowIn{from{opacity:0;transform:translateY(12px)}}
+.medal-row{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:8px 0 14px}
+.medal-cell{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;font-size:.6rem;line-height:1.15;color:var(--muted);font-weight:600}
+.medal-cell .medal{width:100%;height:auto;max-width:54px}
+.medal-cell.got{color:var(--ink)}
+/* running out of air: the edges of the screen close in */
+#air-vig{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .5s;box-shadow:inset 0 0 55px 4px rgba(255,70,60,.42)}
+body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
+@keyframes vig{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){body.low-air #air-vig{animation:none;opacity:.6}.btn-primary.cta,.wk.now:not(.played) i{animation:none}}
 /* logo + cards + buttons */
 .logo{background:linear-gradient(180deg,#ffffff 20%,#a6f7e4 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;
   filter:drop-shadow(0 2px 0 rgba(0,40,50,.35)) drop-shadow(0 0 22px rgba(127,240,216,.35))}
@@ -613,18 +691,21 @@ body.in-game .scene-snow{opacity:.55}
   <!-- ================= HOME ================= -->
   <section id="home" class="screen scroll" aria-labelledby="home-title">
     <div class="seal-stage">
+      <div class="seal-halo" aria-hidden="true"><i class="halo-rays"></i><i class="halo-ring"></i><i class="hb hb1"></i><i class="hb hb2"></i><i class="hb hb3"></i></div>
       <div id="home-seal-wrap" role="button" tabindex="0" aria-label="Tap Séamus"></div>
       <div class="seal-bubble" id="seal-bubble" aria-live="polite"><span class="sb-text"></span><i class="sb-d sb-d1"></i><i class="sb-d sb-d2"></i></div>
     </div>
     <h1 class="logo" id="home-title">Craicillion</h1>
-    <div class="knot" style="width:200px"></div>
+    <div class="logo-sub"><span class="knot"></span><span class="logo-sub-t">The daily Irish word game</span><span class="knot"></span></div>
     <p class="tagline">Dive off the Forty Foot. Say the answer nobody else would.</p>
     <div class="today card">
       <div class="today-main">
-        <span class="today-label">Today's dive</span>
+        <span class="today-label">Today's dive<span class="today-greet" id="home-greet"></span></span>
         <span class="today-no" id="home-dive">Craicillion #1</span>
         <span class="today-date" id="home-date"></span>
       </div>
+      <div class="today-result" id="home-today" hidden></div>
+      <div class="week" id="home-week" aria-label="Your last 7 days"></div>
       <div class="today-stats">
         <div><b id="home-streak">0</b><span>Streak</span></div>
         <div><b id="home-best">0 m</b><span>Best</span></div>
@@ -740,9 +821,11 @@ body.in-game .scene-snow{opacity:.55}
   <section id="results" class="screen scroll" aria-labelledby="res-title">
     <div class="card res-hero">
       <h2 class="logo" id="res-title">Craicillion #1</h2>
+      <div class="res-medal" id="res-medal"></div>
       <div class="res-depth" id="res-depth">0 m</div>
       <div class="res-pts" id="res-pts">0 / 700 points</div>
       <div class="res-lm" id="res-lm"></div>
+      <div class="res-tags" id="res-tags"></div>
       <div class="res-squares" id="res-squares" aria-hidden="true"></div>
       <div class="res-curve" id="res-curve"></div>
     </div>
@@ -800,12 +883,15 @@ body.in-game .scene-snow{opacity:.55}
     <div class="sheet-head"><div><h2 id="stats-title">Do staitisticí</h2><div class="muted">Your stats</div></div>
       <button class="icon-btn" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="stat-grid" id="stat-grid"></div>
+    <h3 style="margin:10px 0 2px;font-size:1rem">Landmarks discovered <span class="muted" id="medal-count" style="font-weight:600"></span></h3>
+    <div class="medal-row" id="medal-row"></div>
     <h3 style="margin:10px 0 2px;font-size:1rem">Every answer you've given</h3>
     <div class="muted" style="font-size:.85rem">Daily Dives only</div>
     <div class="bars" id="bars"></div>
   </div>
 </div>
 <div class="toast" id="toast" role="status"></div>
+<div id="air-vig" aria-hidden="true"></div>
 <div id="fx" aria-hidden="true"></div>
 
 <script>
@@ -13248,6 +13334,37 @@ const LANDMARKS = [
   { m: 5000, name: "The Abyss",       line: "Nothing down here but real ones." },
   { m: 7000, name: "Tír fo Thuinn",   line: "The land under the wave. Mythical." },
 ];
+// Collectible medal for each landmark: colour + a little line icon
+const LM_ART = [
+  { c: "#3fc1b0", d: "M3 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 14c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 19c2-2 4-2 6 0s4 2 6 0 4-2 6 0" },
+  { c: "#2fae7a", d: "M8 21c-2-5 3-7 0-12S9 4 8 2M15 21c2-4-3-6 0-10s-1-5 0-7M8 13l-3-2M8 8l3-2M15 15l3-2M15 9l-3-2" },
+  { c: "#4aa8ff", d: "M5 13a7 7 0 0 1 14 0c0 4-3 7-7 7s-7-3-7-7ZM9.5 12v.5M14.5 12v.5M10 16c1 1 3 1 4 0M12 14.5v1M4 15l-2-1M20 15l2-1" },
+  { c: "#f4c95d", d: "M4 9l3.5 4L12 6l4.5 7L20 9l-1.5 9h-13ZM5.5 21h13" },
+  { c: "#9a6bff", d: "M12 12a1.5 1.5 0 1 1 1.5 1.5A3.5 3.5 0 1 1 10 10a5.5 5.5 0 1 1 5.5 5.5A7.5 7.5 0 1 1 8 8" },
+  { c: "#ff6f8a", d: "M4 21V11l2-2 2 2v10M10 21V7l2-3 2 3v14M16 21V11l2-2 2 2v10M2 21h20M12 1.2v1.3M6 13v2M18 13v2M12 10v3" },
+];
+function medal(i, locked) {
+  const a = LM_ART[i] || LM_ART[0], id = "md" + i + (locked ? "l" : "");
+  return `<svg class="medal${locked ? " locked" : ""}" viewBox="0 0 64 64" role="img" aria-label="${esc(LANDMARKS[i].name)}${locked ? " (not discovered yet)" : ""}">
+    <defs><radialGradient id="${id}" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".45" stop-color="${a.c}"/><stop offset="1" stop-color="#062838"/></radialGradient></defs>
+    <circle cx="32" cy="32" r="30" fill="#04202e"/><circle cx="32" cy="32" r="28" fill="url(#${id})"/>
+    <circle cx="32" cy="32" r="24.5" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="1.6" stroke-dasharray="1.2 3.4" stroke-linecap="round"/>
+    <circle cx="32" cy="32" r="20.5" fill="rgba(3,22,36,.55)"/>
+    ${locked ? `<text x="32" y="39" text-anchor="middle" font-size="20" font-weight="800" fill="#fff" fill-opacity=".8">?</text>`
+             : `<g transform="translate(18.8 18.8) scale(1.1)" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${a.d}"/></g>`}
+  </svg>`;
+}
+const lmIndex = (m) => { let k = 0; LANDMARKS.forEach((l, i) => { if (m >= l.m) k = i; }); return k; };
+// Time of day in Dublin gently changes the light at the surface
+function applyTimeOfDay() {
+  let h = 12; try { h = +new Intl.DateTimeFormat("en-IE", { timeZone: "Europe/Dublin", hour: "numeric", hourCycle: "h23" }).format(new Date()); } catch {}
+  const tod = h >= 6 && h < 9 ? "dawn" : h >= 9 && h < 17 ? "day" : h >= 17 && h < 20 ? "dusk" : "night";
+  const T = { dawn: ["#5fc0b2", "#136c7e", "255,218,200"], day: ["#3fc1b0", "#0f6b7a", "255,253,225"], dusk: ["#3aa5a2", "#0e5a74", "255,200,150"], night: ["#1f7388", "#083c5a", "205,225,255"] }[tod];
+  SEA_STOPS[0] = [0, T[0], T[1]];
+  document.documentElement.style.setProperty("--sun", T[2]);
+  const g = $("#home-greet"); if (g) g.textContent = " · " + (h >= 5 && h < 12 ? "Maidin mhaith" : h >= 12 && h < 21 ? "Tráthnóna maith" : "Dia duit");
+  return tod;
+}
 const SEA_STOPS = [ // depth fraction (sqrt scale) → [top colour, bottom colour]
   [0,    "#3fc1b0", "#0f6b7a"],
   [0.15, "#1d8f9c", "#0a4a68"],
@@ -13269,14 +13386,19 @@ function seamusSVG(cls = "") {
     <stop offset="0" stop-color="#169b62"/><stop offset=".3333" stop-color="#169b62"/>
     <stop offset=".3333" stop-color="#ffffff"/><stop offset=".6667" stop-color="#ffffff"/>
     <stop offset=".6667" stop-color="#ff883e"/><stop offset="1" stop-color="#ff883e"/>
-  </linearGradient></defs>
+  </linearGradient>
+  <radialGradient id="${tri}b" cx="36%" cy="24%" r="85%"><stop offset="0" stop-color="#b4c5d3"/><stop offset=".55" stop-color="#8fa3b5"/><stop offset="1" stop-color="#6f869b"/></radialGradient>
+  <radialGradient id="${tri}y" cx="45%" cy="25%" r="80%"><stop offset="0" stop-color="#eef4f8"/><stop offset="1" stop-color="#bccbd7"/></radialGradient>
+  <linearGradient id="${tri}f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d93a7"/><stop offset="1" stop-color="#627a90"/></linearGradient></defs>
   <g>
-    <g class="s-fl"><ellipse cx="38" cy="98" rx="16" ry="7" fill="#71879b" transform="rotate(-30 38 98)"/></g>
-    <g class="s-fr"><ellipse cx="104" cy="98" rx="16" ry="7" fill="#71879b" transform="rotate(30 104 98)"/></g>
+    <g class="s-fl"><ellipse cx="38" cy="98" rx="16" ry="7" fill="url(#${tri}f)" transform="rotate(-30 38 98)"/></g>
+    <g class="s-fr"><ellipse cx="104" cy="98" rx="16" ry="7" fill="url(#${tri}f)" transform="rotate(30 104 98)"/></g>
     <path d="M70 128c-9 0-14 6-22 8 4-6 6-10 6-14h32c0 4 2 8 6 14-8-2-13-8-22-8z" fill="#71879b"/>
-    <ellipse cx="70" cy="88" rx="34" ry="38" fill="#8fa3b5"/>
-    <ellipse cx="70" cy="98" rx="22" ry="25" fill="#c9d6e0"/>
-    <circle cx="70" cy="56" r="34" fill="#8fa3b5"/>
+    <ellipse cx="70" cy="88" rx="34" ry="38" fill="url(#${tri}b)"/>
+    <ellipse cx="70" cy="98" rx="22" ry="25" fill="url(#${tri}y)"/>
+    <circle cx="70" cy="56" r="34" fill="url(#${tri}b)"/>
+    <g fill="#566d82" opacity=".22"><ellipse cx="52" cy="29" rx="4" ry="2.6"/><ellipse cx="64" cy="25.5" rx="2.6" ry="1.8"/><ellipse cx="80" cy="26.5" rx="3.6" ry="2.2"/><ellipse cx="91" cy="32" rx="2.4" ry="1.7"/><ellipse cx="42" cy="36" rx="2.2" ry="1.6"/><ellipse cx="40" cy="104" rx="2.6" ry="3.6"/><ellipse cx="99" cy="108" rx="2.4" ry="3.2"/><ellipse cx="43" cy="114" rx="1.8" ry="2.4"/></g>
+    <path d="M44 40c6-10 18-15 30-14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".28"/>
     <path d="M38 78c10 8 54 8 64 0l2 9c-12 9-56 9-68 0z" fill="url(#${tri})" stroke="rgba(0,0,0,.18)" stroke-width=".8"/>
     <path d="M44 81l3 7M52 83l2 7M60 84l1 7M70 84v7M80 84l-1 7M88 83l-2 7M96 81l-3 7" stroke="#000" stroke-width="1.2" stroke-linecap="round" opacity=".12"/>
     <path d="M92 86c4 10 3 18-2 24l-8-3c4-6 5-12 3-18z" fill="url(#${tri})" stroke="rgba(0,0,0,.18)" stroke-width=".8"/>
@@ -13284,12 +13406,13 @@ function seamusSVG(cls = "") {
     <circle cx="56" cy="52" r="12.5" fill="rgba(190,240,255,.35)" stroke="#f4c95d" stroke-width="3.5"/>
     <circle cx="84" cy="52" r="12.5" fill="rgba(190,240,255,.35)" stroke="#f4c95d" stroke-width="3.5"/>
     <path d="M68.5 52h3" stroke="#f4c95d" stroke-width="3.5" stroke-linecap="round"/>
-    <ellipse cx="56" cy="53" rx="6" ry="7" fill="#14202b"/>
+    <g class="s-eyes"><ellipse cx="56" cy="53" rx="6" ry="7" fill="#14202b"/>
     <ellipse cx="84" cy="53" rx="6" ry="7" fill="#14202b"/>
     <circle cx="58.2" cy="50.4" r="2.3" fill="#fff"/><circle cx="86.2" cy="50.4" r="2.3" fill="#fff"/>
-    <circle cx="54.5" cy="56" r="1" fill="#fff" opacity=".8"/><circle cx="82.5" cy="56" r="1" fill="#fff" opacity=".8"/>
+    <circle cx="54.5" cy="56" r="1" fill="#fff" opacity=".8"/><circle cx="82.5" cy="56" r="1" fill="#fff" opacity=".8"/></g>
+    <path d="M47.5 46.5a10 10 0 0 1 6-5M75.5 46.5a10 10 0 0 1 6-5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity=".75"/>
     <ellipse cx="70" cy="68" rx="12" ry="8.5" fill="#b5c4d1"/>
-    <ellipse cx="70" cy="64.5" rx="4.6" ry="3.4" fill="#14202b"/>
+    <ellipse cx="70" cy="64.5" rx="4.6" ry="3.4" fill="#14202b"/><ellipse cx="68.6" cy="63.4" rx="1.5" ry=".9" fill="#fff" opacity=".55"/>
     <path d="M64 70.5c2 2.4 4.4 2.4 6 0 1.6 2.4 4 2.4 6 0" stroke="#14202b" stroke-width="1.8" fill="none" stroke-linecap="round"/>
     <g class="s-mouth"><ellipse cx="70" cy="74.5" rx="4.2" ry="3.6" fill="#3b1521"/><ellipse cx="70" cy="76.6" rx="2.6" ry="1.4" fill="#ff8fa3"/></g>
     <circle cx="48" cy="68" r="5" fill="#ff8fa3" opacity=".45"/><circle cx="92" cy="68" r="5" fill="#ff8fa3" opacity=".45"/>
@@ -13788,6 +13911,9 @@ function renderHome() {
   loadDaily();
   const key = todayKey();
   $("#home-seal-wrap").innerHTML = seamusSVG("home-seal");
+  const ht = $("#home-title");
+  if (!ht.dataset.split) { ht.dataset.split = "1"; ht.setAttribute("aria-label", "Craicillion");
+    ht.innerHTML = [..."Craicillion"].map((ch, i) => `<span class="lg${i ? "" : " cap"}" style="--i:${i}" aria-hidden="true">${ch}</span>`).join(""); }
   $("#home-dive").textContent = `Craicillion #${daily.dive}`;
   $("#home-date").textContent = prettyDate(key);
   const st = computeStats();
@@ -13798,6 +13924,15 @@ function renderHome() {
   if (daily.done) btn.innerHTML = `<span class="ga">Do thorthaí</span><small>See today's results</small>`;
   else if (daily.idx > 0) btn.innerHTML = `<span class="ga">Lean ar aghaidh</span><small>Resume dive · ${daily.idx + 1}/${PROMPTS_PER_DIVE}</small>`;
   else btn.innerHTML = `<span class="ga">Tosaigh</span><small>Start the Dive</small>`;
+  btn.classList.toggle("cta", !daily.done);
+  const hist = store.get(K_STATS, { history: {} }).history, ti = dayIndex(key), li = dayIndex(LAUNCH_DATE);
+  $("#home-week").innerHTML = Array.from({ length: 7 }, (_, k) => { const di = ti - 6 + k, dk = new Date(di * 864e5).toISOString().slice(0, 10), rec = hist[dk];
+    const letter = "SMTWTFS"[new Date(di * 864e5).getUTCDay()];
+    return `<div class="wk${rec ? " played" : ""}${di === ti ? " now" : ""}${di < li ? " pre" : ""}" ${rec ? `style="--wc:${LM_ART[lmIndex(rec.points * 10)].c}" title="${fmtM(rec.points * 10)}"` : ""}><i>${rec ? "✓" : ""}</i>${letter}</div>`; }).join("");
+  const tr = $("#home-today"), trec = hist[key];
+  tr.hidden = !(daily.done && trec);
+  if (daily.done && trec) tr.innerHTML = `<span>${fmtM(trec.points * 10)} · ${esc(landmarkFor(trec.points * 10).name)}</span><span class="tiles">${trec.tiers.map((t) => tile(TIERS[t] ? t : null)).join("")}</span>`;
+  applyTimeOfDay();
   updateCountdowns(); renderRarerFeature();
   shownDepth = 0; setSea(0);
   show("home");
@@ -13878,14 +14013,14 @@ function startTimer() {
     const left = Math.max(0, total - (Date.now() - timer.start));
     fill.style.transform = `scaleX(${left / total})`;
     secs.textContent = Math.ceil(left / 1000);
-    air.classList.toggle("low", left < 6000);
+    air.classList.toggle("low", left < 6000); document.body.classList.toggle("low-air", left < 5000 && phase === "answering");
     if (left <= 0) { stopTimer(); if (phase === "answering") resolve(null, true); return; }
     timer.raf = requestAnimationFrame(tick);
   };
   tick();
   timer.iv = setInterval(() => { if (phase === "answering" && Date.now() - timer.start >= total) { stopTimer(); resolve(null, true); } }, 250);
 }
-function stopTimer() { cancelAnimationFrame(timer.raf); clearInterval(timer.iv); }
+function stopTimer() { cancelAnimationFrame(timer.raf); clearInterval(timer.iv); document.body.classList.remove("low-air"); }
 
 function onSubmit(e) {
   e.preventDefault();
@@ -14097,7 +14232,22 @@ function renderResults() {
   const g = cur(); const pts = totalPts(g), m = pts * 10, lm = landmarkFor(m);
   stopTimer(); phase = "idle";
   $("#res-title").textContent = mode !== "free" ? `Craicillion #${g.dive}` : `Infinite · Round ${g.round}`;
-  $("#res-depth").textContent = fmtM(m);
+  const li = lmIndex(m), rm = $("#res-medal");
+  rm.innerHTML = medal(li, false); rm.classList.remove("stamp"); void rm.offsetWidth; rm.classList.add("stamp");
+  const tags = [];
+  if (mode === "daily" && g.done) {
+    const hist = store.get(K_STATS, { history: {} }).history, prev = Object.entries(hist).filter(([k]) => k !== g.date).map(([, v]) => v.points * 10);
+    const prevBest = prev.length ? Math.max(...prev) : -1;
+    if (prev.length && m > prevBest) tags.push(`<span class="rtag pb">🏆 Personal best!</span>`);
+    if (li > lmIndex(Math.max(0, prevBest)) || (!prev.length && li > 0)) tags.push(`<span class="rtag lmk">New landmark: ${esc(lm.name)}</span>`);
+    const st = computeStats(); if (st.curStreak >= 2) tags.push(`<span class="rtag st">🔥 ${st.curStreak}-day streak</span>`);
+  }
+  $("#res-tags").innerHTML = tags.join("");
+  const dEl = $("#res-depth");
+  if (reduceMotion || !m) dEl.textContent = fmtM(m);
+  else { const t0 = performance.now(), dur = 1100; dEl.textContent = fmtM(0);
+    const step = (now) => { const t = Math.min(1, (now - t0) / dur); dEl.textContent = fmtM(m * (1 - Math.pow(1 - t, 3))); if (t < 1 && $("#results").classList.contains("active")) requestAnimationFrame(step); else dEl.textContent = fmtM(m); };
+    requestAnimationFrame(step); }
   $("#res-pts").textContent = mode !== "free" ? `${pts} / ${MAX_POINTS} points` : `${pts} / ${MAX_POINTS} points` + (g.round > 1 ? ` · ${(g.total + pts).toLocaleString("en-IE")} pts over ${g.round} rounds` : "");
   $("#res-lm").innerHTML = `Reached <b>${esc(lm.name)}</b><div class="muted" style="font-size:.9rem;margin-top:2px">${esc(lm.line)}</div>`;
   $("#res-squares").innerHTML = g.results.map((r) => tile(r.tier)).join("");
@@ -14109,6 +14259,7 @@ function renderResults() {
     return `<li><span class="res-q">${esc(p ? p.prompt : r.id)}</span>${ans}<span class="res-right">${t ? `<span class="badge ${r.tier}">${icon(r.tier)} ${esc(t.name)}</span>` : `<span class="badge miss">${icon("miss")} Miss</span>`}<b>${r.pts}</b></span>
       ${p ? `<details class="all" data-id="${esc(p.id)}" data-mine="${esc(r.a || "")}"><summary>See all ${p.answers.length} answers</summary><div class="all-body"></div></details>` : ""}</li>`;
   }).join("");
+  const rl = $("#res-list"); rl.classList.toggle("stagger", !reduceMotion); rl.querySelectorAll("li").forEach((li2, k) => (li2.style.animationDelay = (0.5 + k * 0.07) + "s"));
   $("#res-list").querySelectorAll("details.all").forEach((d) => d.addEventListener("toggle", () => { if (d.open) fillAllAnswers(d); }));
   $("#share-btn").style.display = mode !== "free" ? "" : "none";
   $("#res-free").textContent = mode === "free" ? "Keep diving" : "Infinite";
@@ -14449,6 +14600,9 @@ function renderStats() {
     ["Best depth", fmtM(st.best)], ["Avg depth", fmtM(st.avg)], ["Deepest", landmarkFor(st.best).name],
   ].map(([l, v]) => `<div class="stat"><b style="${String(v).length > 9 ? "font-size:.95rem;line-height:1.9rem" : ""}">${esc(v)}</b><span>${l}</span></div>`).join("");
   const max = Math.max(1, ...Object.values(st.dist));
+  const got = st.played ? lmIndex(st.best) : -1;
+  $("#medal-count").textContent = `${got + 1}/${LANDMARKS.length}`;
+  $("#medal-row").innerHTML = LANDMARKS.map((l, i) => `<div class="medal-cell${i <= got ? " got" : ""}">${medal(i, i > got)}<span>${i <= got ? esc(l.name) : l.m.toLocaleString("en-IE") + " m"}</span></div>`).join("");
   $("#bars").innerHTML = [...TIER_ORDER].reverse().concat("miss").map((t) => {
     const n = st.dist[t] || 0; const name = t === "miss" ? "Misses" : TIERS[t].name;
     return `<div class="bar-row"><span class="bar-name">${tile(t === "miss" ? null : t)}${esc(name)}</span><div class="bar-track"><div class="bar-fill" style="width:${(n / max) * 100}%;background:var(--t-${t})"></div></div><b>${n}</b></div>`;
