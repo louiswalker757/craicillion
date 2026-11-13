@@ -599,7 +599,42 @@ body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
 .rr-f-text small{display:block;color:var(--muted);font-size:.8rem;line-height:1.3}
 .rr-f-best{grid-column:2;font-size:.75rem;font-weight:700;color:var(--gold);margin-top:4px}
 .rr-f-best:empty{display:none}
-#rarer{gap:10px}
+#rarer,#realfake{gap:10px}
+#realfake{position:relative}
+.mode-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.mode-row .rr-feature{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:30px 12px 12px;min-width:0}
+.mode-row .rr-f-icons{grid-row:auto}
+.mode-row .rr-f-icons .tile{width:26px;height:26px}
+.mode-row .rr-f-text b{font-size:.98rem;line-height:1.15}
+.mode-row .rr-f-text small{font-size:.74rem;margin-top:2px}
+.mode-row .rr-f-best{margin-top:auto;font-size:.7rem}
+.mode-row .ltm-ribbon{right:10px;font-size:.52rem;padding:4px 8px 5px 7px;letter-spacing:.12em}
+.ltm-ribbon.new{background:linear-gradient(180deg,#c9fff2,#7ff0d8 55%,#3fc1b0);color:#03263a;padding-left:10px;padding-right:10px}
+.rf-feature{border-color:rgba(127,240,216,.45);background:linear-gradient(135deg,rgba(63,211,152,.2),rgba(255,92,108,.12) 70%,rgba(255,255,255,.04)),var(--glass)}
+.rf-chip{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:.9rem;color:#04202e}
+.rf-chip.real{background:#3fd398}.rf-chip.fake{background:#ff7a86}
+.rf-card{flex:none;text-align:center;padding:14px 16px}
+.rf-q{margin:4px 0 0;font-size:1.1rem;font-weight:600;color:var(--muted)}
+.rf-q b{color:#fff;font-weight:800}
+.rf-opts{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;justify-content:center;max-height:420px}
+.rf-opt{appearance:none;position:relative;flex:1;min-height:76px;max-height:118px;border-radius:18px;border:2px solid rgba(255,255,255,.18);cursor:pointer;color:#fff;font:inherit;
+  padding:10px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;
+  background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.04)),rgba(3,22,38,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 12px 26px -16px rgba(0,0,0,.6);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:transform .12s,border-color .25s,background .3s,box-shadow .3s,opacity .3s;touch-action:manipulation}
+.rf-opt:hover{border-color:rgba(127,240,216,.6)}
+.rf-opt:active{transform:scale(.98)}
+.rf-opt:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.rf-opt[disabled]{cursor:default}
+.rf-o-name{font-weight:800;font-size:clamp(1.25rem,6vw,1.65rem);line-height:1.1;letter-spacing:-.01em;overflow-wrap:anywhere;text-shadow:0 2px 10px rgba(0,20,30,.35)}
+.rf-opt.long .rf-o-name{font-size:clamp(1rem,4.6vw,1.25rem)}
+.rf-o-sub{font-size:.82rem;font-weight:700;opacity:0;max-height:0;transition:opacity .3s}
+.rf-opt.revealed .rf-o-sub{opacity:1;max-height:2em}
+.rf-opt.real.revealed{opacity:.72}
+.rf-opt.real.revealed .rf-o-sub{color:#9ff0c9}
+.rf-opt.fake.revealed .rf-o-sub{color:#ffd0d5}
+.rf-opt.right{border-color:#3fd398;background:linear-gradient(180deg,rgba(63,211,152,.32),rgba(63,211,152,.1)),rgba(3,22,38,.55);box-shadow:0 0 0 3px #3fd398,0 0 32px -4px #3fd398;opacity:1;animation:rrRight .5s cubic-bezier(.2,1.6,.4,1)}
+.rf-opt.wrong{border-color:#ff5c6c;background:linear-gradient(180deg,rgba(255,92,108,.32),rgba(255,92,108,.1)),rgba(3,22,38,.55);box-shadow:0 0 0 3px #ff5c6c,0 0 32px -4px #ff5c6c;opacity:1;animation:rrWrong .45s}
+.rf-opt.missed{border-color:#ff5c6c;border-style:dashed;opacity:1}
 .rr-head{text-align:center;line-height:1.15}
 .rr-head b{display:block;font-size:1rem}
 .rr-head small{font-size:.7rem;color:var(--muted)}
@@ -740,12 +775,20 @@ body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
     </div>
     <div class="home-actions">
       <button class="btn btn-primary" id="start-btn"><span class="ga">Tosaigh</span><small>Start the Dive</small></button>
+      <div class="mode-row">
       <button class="rr-feature card" id="rarer-btn" aria-label="Which is Rarer? Limited time mode">
         <span class="ltm-ribbon" aria-hidden="true"><i class="ltm-dot"></i>Limited time</span>
         <span class="rr-f-icons" aria-hidden="true"><span class="rr-f-a"></span><span class="rr-f-vs">vs</span><span class="rr-f-b"></span></span>
-        <span class="rr-f-text"><b>Which is Rarer?</b><small>Two answers. Tap the rarer one. How long can you last?</small></span>
+        <span class="rr-f-text"><b>Which is Rarer?</b><small>Two answers. Tap the rarer one.</small></span>
         <span class="rr-f-best" id="home-rr-best"></span>
       </button>
+      <button class="rr-feature card rf-feature" id="realfake-btn" aria-label="Real or Fake? New mode">
+        <span class="ltm-ribbon new" aria-hidden="true">New</span>
+        <span class="rr-f-icons" aria-hidden="true"><span class="rf-chip real">✓</span><span class="rr-f-vs">or</span><span class="rf-chip fake">✗</span></span>
+        <span class="rr-f-text"><b>Real or Fake?</b><small>Three Irish places. One is made up.</small></span>
+        <span class="rr-f-best" id="home-rf-best"></span>
+      </button>
+      </div>
       <div class="home-row">
         <button class="btn btn-ghost" id="howto-btn" aria-label="How to play">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .8c0 1.8-2.5 2.2-2.5 4"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/></svg>How to Play</button>
@@ -844,6 +887,46 @@ body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
     </div>
   </section>
 
+  <!-- ================= REAL OR FAKE? ================= -->
+  <section id="realfake" class="screen" aria-label="Real or Fake?">
+    <div class="g-head">
+      <button class="icon-btn" id="rf-quit" aria-label="Back to home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="rr-head"><b>Real or Fake?</b><small>Irish place names</small></div>
+      <div class="g-depth"><span class="rr-streak" id="rf-streak">🔥 0</span><small id="rf-best">Best 0</small></div>
+    </div>
+    <div class="air" id="rf-air" role="timer" aria-label="Time left">
+      <span class="air-label">Aer</span>
+      <div class="air-track"><div class="air-fill" id="rf-fill"></div></div>
+      <span class="air-secs" id="rf-secs">8</span>
+    </div>
+    <div class="card rf-card" id="rf-card">
+      <div class="kicker" id="rf-kicker">Round 1</div>
+      <p class="rf-q">Two are real. <b>Which one is fake?</b></p>
+    </div>
+    <div class="rf-opts" id="rf-opts">
+      <button class="rf-opt" data-i="0"><span class="rr-key">1</span><span class="rf-o-name"></span><span class="rf-o-sub"></span></button>
+      <button class="rf-opt" data-i="1"><span class="rr-key">2</span><span class="rf-o-name"></span><span class="rf-o-sub"></span></button>
+      <button class="rf-opt" data-i="2"><span class="rr-key">3</span><span class="rf-o-name"></span><span class="rf-o-sub"></span></button>
+    </div>
+    <div class="rr-msg" id="rf-msg" aria-live="polite"></div>
+    <div class="rr-over" id="rf-over" hidden>
+      <div class="card rr-over-card">
+        <div class="kicker">Real or Fake?</div>
+        <div class="rr-over-streak"><span id="rf-final">0</span><small>in a row</small></div>
+        <div class="rr-newbest" id="rf-newbest" hidden>🏆 New best!</div>
+        <div class="rr-over-best" id="rf-over-best"></div>
+        <div class="rr-lost" id="rf-lost"></div>
+        <div class="rr-over-actions">
+          <button class="btn btn-primary" id="rf-again"><span class="ga">Arís!</span><small>Play again</small></button>
+          <div class="row">
+            <button class="btn btn-ghost" id="rf-share">Share</button>
+            <button class="btn btn-ghost" id="rf-home">Home</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ================= RESULTS ================= -->
   <section id="results" class="screen scroll" aria-labelledby="res-title">
     <div class="card res-hero">
@@ -894,7 +977,7 @@ body.low-air #air-vig{opacity:1;animation:vig .8s ease-in-out infinite}
     <table class="tier-table" id="tier-table"></table>
     <h3 style="margin:16px 0 4px;font-size:1rem">Landmarks on the way down</h3>
     <div class="landmarks" id="lm-table"></div>
-    <p class="muted" style="font-size:.88rem">One scored dive a day; it rolls over at midnight, Irish time. <b>Infinite</b> is endless practice: dive 7 prompts, surface, then keep going as long as you like. It doesn't touch your stats. Missed a day? Play any past dive from the <b>Archive</b>. And for a limited time, try <b>Which is Rarer?</b>: two answers from a past dive, tap the rarer one, and see how long a streak you can build.</p>
+    <p class="muted" style="font-size:.88rem">One scored dive a day; it rolls over at midnight, Irish time. <b>Infinite</b> is endless practice: dive 7 prompts, surface, then keep going as long as you like. It doesn't touch your stats. Missed a day? Play any past dive from the <b>Archive</b>. And for a limited time, try <b>Which is Rarer?</b>: two answers from a past dive, tap the rarer one, and see how long a streak you can build. New: <b>Real or Fake?</b> shows you three Irish place names. Two are real and Séamus made one up. Spot the fake!</p>
     <p class="muted" style="font-size:.88rem">Spotted a wrong answer, a missing one, or have an idea? Email Séamus at <a class="fb-inline" href="mailto:craicillion@gmail.com?subject=Craicillion%20feedback">craicillion@gmail.com</a>.</p>
     <button class="btn btn-primary" data-close style="width:100%;margin-top:6px">Grand, got it</button>
   </div>
@@ -942,7 +1025,7 @@ const PINNED_DIVES = {
 };
 // Days that have already been played are frozen here forever, so adding or removing
 // prompts never changes a past dive (or today's). Only days after these get reshuffled.
-const LOCKED_DIVES = {"1":["stadiums","actors","dubbuildings","dubswims","dubslang","surnames","loiclubs"],"2":["dogs","u2","firstnames","media","hiberno","brands","shops"],"3":["tvfilm","gaanicknames","plants","cranberries","dubfamous","fry","tiktokers"]};
+const LOCKED_DIVES = {"1":["stadiums","actors","dubbuildings","dubswims","dubslang","surnames","loiclubs"],"2":["dogs","u2","firstnames","media","hiberno","brands","shops"],"3":["tvfilm","gaanicknames","plants","cranberries","dubfamous","fry","tiktokers"],"4":["spuds","dartluas","colleges","sportstars","biscuits","livestock","dinner"]};
 
 /* =====================================================================
    PROMPTS · the question bank
@@ -12093,6 +12176,11 @@ const PROMPTS = [
     { a: "Paul McGinley", tier: "sound", aliases: [] },
     { a: "Hugo Keenan", tier: "sound", aliases: [] },
     { a: "Edmund Burke", tier: "sound", aliases: [] },
+    { a: "Gavin James", tier: "sound", aliases: [] },
+    { a: "Aidan Turner", tier: "sound", aliases: [] },
+    { a: "Orla Gartland", tier: "sound", aliases: [] },
+    { a: "Mattress Mick", tier: "sound", aliases: [] },
+    { a: "Graham Norton", tier: "sound", aliases: [] },
     { a: "Ciarán Kilkenny", tier: "savage", aliases: [] },
     { a: "Con O'Callaghan", tier: "savage", aliases: [] },
     { a: "Brian Fenton", tier: "savage", aliases: [] },
@@ -12195,6 +12283,17 @@ const PROMPTS = [
     { a: "Twink", tier: "savage", aliases: [] },
     { a: "Dominic Behan", tier: "savage", aliases: [] },
     { a: "Eddie Jordan", tier: "savage", aliases: [] },
+    { a: "Grian Chatten", tier: "savage", aliases: [] },
+    { a: "KhakiKid", tier: "savage", aliases: [] },
+    { a: "Curtisy", tier: "savage", aliases: [] },
+    { a: "Shane Daniel Byrne", tier: "savage", aliases: [] },
+    { a: "Rachel Galvo", tier: "savage", aliases: [] },
+    { a: "Ryan Carrick", tier: "savage", aliases: [] },
+    { a: "James Patrice", tier: "savage", aliases: [] },
+    { a: "Sophie Morris", tier: "savage", aliases: [] },
+    { a: "The Diceman", tier: "savage", aliases: ["Thom McGinty"] },
+    { a: "Luka Palm", tier: "savage", aliases: [] },
+    { a: "Paul Olima", tier: "savage", aliases: ["olima_omega"] },
     { a: "Arthur Wellesley", tier: "deadly", aliases: ["Duke of Wellington"] },
     { a: "Richard Brinsley Sheridan", tier: "deadly", aliases: ["Sheridan"] },
     { a: "Sheridan Le Fanu", tier: "deadly", aliases: ["Le Fanu"] },
@@ -12237,6 +12336,18 @@ const PROMPTS = [
     { a: "Louis le Brocquy", tier: "deadly", aliases: [] },
     { a: "George Francis FitzGerald", tier: "deadly", aliases: [] },
     { a: "Michael McDowell", tier: "deadly", aliases: [] },
+    { a: "JyellowL", tier: "deadly", aliases: [] },
+    { a: "Malaki", tier: "deadly", aliases: [] },
+    { a: "Sello", tier: "deadly", aliases: [] },
+    { a: "Ross McCarney", tier: "deadly", aliases: [] },
+    { a: "Simon Hennessy", tier: "deadly", aliases: ["simonhennescenes"] },
+    { a: "Jamie Lo", tier: "deadly", aliases: ["jammydodged"] },
+    { a: "Nev Jones", tier: "deadly", aliases: ["nehvjones"] },
+    { a: "Sophie Murray", tier: "deadly", aliases: ["sophie_murraayy"] },
+    { a: "Ciarán Dunne", tier: "deadly", aliases: ["fooddunneright"] },
+    { a: "Matthew Weldon", tier: "deadly", aliases: ["Courtville Jewellers"] },
+    { a: "Elaine Fitzsimons", tier: "deadly", aliases: ["The Matcha Bar"] },
+    { a: "The Hairy Lemon", tier: "deadly", aliases: [] },
     { a: "Francis Bacon", tier: "craic", aliases: ["Francis Bacon (painter)"] },
     { a: "Harry Clarke", tier: "craic", aliases: [] },
     { a: "Seán Scully", tier: "craic", aliases: [] },
@@ -12244,9 +12355,13 @@ const PROMPTS = [
     { a: "Ross O'Carroll-Kelly", tier: "craic", aliases: [] },
     { a: "Agnes Brown", tier: "craic", aliases: ["Mrs Brown"] },
     { a: "Bang Bang", tier: "craic", aliases: ["Thomas Dudley"] },
-    { a: "Johnny Forty Coats", tier: "craic", aliases: [] },
+    { a: "Johnny Forty Coats", tier: "craic", aliases: ["Forty Coats"] },
     { a: "Hector Grey", tier: "craic", aliases: [] },
     { a: "Dustin the Turkey", tier: "craic", aliases: ["Dustin"] },
+    { a: "earfzilla", tier: "craic", aliases: [] },
+    { a: "Mad Micko", tier: "craic", aliases: [] },
+    { a: "Elzzz", tier: "craic", aliases: [] },
+    { a: "Bricknasty", tier: "craic", aliases: [] },
   ] },
   { id: "northside", prompt: "Name an area on Dublin's Northside", not: ["Tallaght", "Rathmines", "Ranelagh", "Dún Laoghaire", "Dundrum", "Foxrock", "Dalkey", "Rathgar", "Terenure", "Harold's Cross", "Crumlin", "Drimnagh", "Kimmage", "Walkinstown", "Templeogue", "Rathfarnham", "Knocklyon", "Firhouse", "Ballinteer", "Churchtown", "Milltown", "Clonskeagh", "Donnybrook", "Ballsbridge", "Sandymount", "Ringsend", "Irishtown", "Booterstown", "Blackrock", "Monkstown", "Glenageary", "Killiney", "Ballybrack", "Shankill", "Cabinteely", "Stillorgan", "Mount Merrion", "Goatstown", "Sandyford", "Stepaside", "Leopardstown", "Carrickmines", "Ballyboden", "Inchicore", "Kilmainham", "Bluebell", "Ballyfermot", "Palmerstown", "Lucan", "Clondalkin", "Rialto", "Dolphin's Barn", "The Liberties", "Portobello", "Perrystown", "Greenhills", "Jobstown", "Citywest", "Saggart", "Rathcoole", "Newcastle", "Cherry Orchard", "Chapelizod", "Islandbridge", "Sallynoggin", "Deansgrange", "Kilternan", "Glencullen", "Sandycove", "Glasthule", "Merrion", "Windy Arbour", "Kilmacud", "Ballyogan", "Cherrywood", "Loughlinstown", "Dublin 4", "D4", "Dublin 6", "D6", "Dublin 6W", "D6W", "Dublin 8", "D8", "Dublin 12", "D12", "Dublin 14", "D14", "Dublin 16", "D16", "Dublin 18", "D18", "Dublin 2", "D2", "Dublin 10", "D10", "Dublin 20", "D20", "Dublin 22", "D22", "Dublin 24", "D24", "Belfield", "Roebuck", "Galloping Green", "Ticknock", "Kilgobbin", "Rathmichael", "Johnstown", "Bulloch Harbour", "Bullock Harbour", "Seapoint", "Salthill", "Whitechurch", "Edmondstown", "Ballyroan", "Dartry", "Mount Argus", "Ballymount", "The Coombe", "Pimlico", "Kylemore", "Ballyowen", "Esker", "Adamstown", "Kishoge", "Grange Castle", "Baldonnel", "Brittas", "Killinarden", "Aylesbury", "Old Bawn", "Scholarstown", "Kiltipper", "Glenasmole", "Bohernabreena", "Tibradden", "Cornelscourt", "Shanganagh", "Rathsallagh", "Woodbrook", "Kilnamanagh", "Belgard", "Fettercairn", "Kingswood", "Neilstown", "Rowlagh", "Quarryvale", "Liffey Valley", "Grand Canal Dock", "Silicon Docks", "Mespil", "Pembroke", "Simmonscourt", "Beggars Bush", "Blackpitts", "The Tenters", "Newmarket", "Mount Brown", "Goldenbridge", "Robinhood", "Red Cow", "Bawnogue", "Deansrath", "Ronanstown", "Knockmitten", "Balgaddy", "Finnstown", "Griffeen", "Ballydowd", "Gallanstown", "Coldcut", "Crumlin Cross", "Kimmage Cross Roads", "KCR", "Barnacullia", "Ballyedmonduff", "Glenamuck", "Kerrymount", "Brennanstown", "Ballycorus", "Carrickgollogan", "Crinken", "Ballybride", "Ballinclea", "Mounttown", "Monkstown Farm", "Kill of the Grange", "Kill o' the Grange", "Mount Anville", "Featherbed", "Ballinascorney", "Piperstown", "Mount Venus", "Orlagh", "Woodtown", "Ballycragh", "Oldcourt", "Tymon North", "Tymon", "Bancroft", "Cheeverstown", "Fortunestown", "Newlands Cross", "Cloverhill", "Weaver's Square", "Fumbally", "Fumbally Lane", "Pigeon House", "Poolbeg", "Poolbeg Peninsula", "Shelly Banks"], answers: [
     { a: "Ballymun", tier: "sure", aliases: [] },
@@ -13937,6 +14052,7 @@ function show(id) {
   document.body.classList.toggle("in-game", id === "game");
   if (id !== "game" && document.body.classList.contains("submerged")) { document.documentElement.style.setProperty("--sub-dur", "1.2s"); document.documentElement.style.setProperty("--sub-ease", "cubic-bezier(.2,.7,.3,1)"); document.body.classList.remove("submerged"); }
   if (id !== "home") { const sb = $("#seal-bubble"); if (sb) sb.classList.remove("show", "out"); const sw = $("#home-seal-wrap"); if (sw) sw.classList.remove("talking"); }
+  if (id !== "realfake" && typeof rfStop === "function") { rfStop(); if (rf && rf.phase !== "over") rf.phase = "idle"; }
   if (id !== "rarer" && typeof rrStop === "function") { rrStop(); if (rr && rr.phase !== "over") rr.phase = "idle"; }
 }
 function renderHome() {
@@ -13966,7 +14082,7 @@ function renderHome() {
   if (daily.done && trec) tr.innerHTML = `<span>${fmtM(trec.points * 10)} · ${esc(landmarkFor(trec.points * 10).name)}</span><span class="tiles">${trec.tiers.map((t) => tile(TIERS[t] ? t : null)).join("")}</span>`;
   applyTimeOfDay();
   $("#home-feedback").href = mailto(`Craicillion feedback (Craicillion #${daily.dive})`, "Hi Séamus,\n\n");
-  updateCountdowns(); renderRarerFeature();
+  updateCountdowns(); renderRarerFeature(); renderRealFakeFeature();
   shownDepth = 0; setSea(0);
   show("home");
 }
@@ -14387,7 +14503,7 @@ function shareText() {
   return `Craicillion #${g.dive}${tag} 🦭\nDived ${m.toLocaleString("en-IE")}m — reached ${lm.name}\n${g.results.map((r) => (r.tier ? TIERS[r.tier].emoji : "❌")).join("")}\n${SHARE_URL}`;
 }
 async function share(text = shareText()) {
-  track(/Which is Rarer/.test(text) ? "share-rarer" : "share");
+  track(/Which is Rarer/.test(text) ? "share-rarer" : /Real or Fake/.test(text) ? "share-realfake" : "share");
   try { await navigator.clipboard.writeText(text); return toast("Copied! Paste it in the group chat 🦭"); } catch {}
   try { const ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
     document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); if (ok) return toast("Copied! Paste it in the group chat 🦭"); } catch {}
@@ -14603,6 +14719,100 @@ function seamusPoke() {
   seamusSay(); seamusLoop();
 }
 
+/* =====================================================================
+   REAL OR FAKE? Irish place names: some gloriously real, some invented.
+   Every real one was checked against OpenStreetMap; every fake one was
+   checked to make sure it does NOT exist.
+   ===================================================================== */
+const RF_REAL = [["Abbeyleix","Laois"],["Ahoghill","Antrim"],["Augher","Tyrone"],["Bailieborough","Cavan"],["Balla","Mayo"],["Ballinspittle","Cork"],["Ballyboughal","Dublin"],["Ballybrittas","Laois"],["Ballybunion","Kerry"],["Ballydehob","Cork"],["Ballygobbin","Antrim"],["Ballyjamesduff","Cavan"],["Ballymore Eustace","Kildare"],["Ballyporeen","Tipperary"],["Bastardstown","Wexford"],["Batterstown","Meath"],["Belmullet","Mayo"],["Bennettsbridge","Kilkenny"],["Birdhill","Tipperary"],["Blacklion","Cavan"],["Blackpitts","Dublin"],["Blue Ball","Offaly"],["Bohola","Mayo"],["Boolavogue","Wexford"],["Boolteens","Kerry"],["Borris-in-Ossory","Laois"],["Bruckless","Donegal"],["Bruff","Limerick"],["Bruree","Limerick"],["Burnfoot","Donegal"],["Buttevant","Cork"],["Camp","Kerry"],["Cappawhite","Tipperary"],["Carndonagh","Donegal"],["Castlebellingham","Louth"],["Castledermot","Kildare"],["Cheekpoint","Waterford"],["Claddaghduff","Galway"],["Clarinbridge","Galway"],["Clonbullogue","Offaly"],["Clonmany","Donegal"],["Cloughjordan","Tipperary"],["Cong","Mayo"],["Convoy","Donegal"],["Coolboy","Wicklow"],["Cow Parlour","Dublin"],["Cratloe","Clare"],["Craughwell","Galway"],["Crookhaven","Cork"],["Crossmaglen","Armagh"],["Crumlin","Dublin"],["Cuckoo Lane","Dublin"],["Cullybackey","Antrim"],["Curry","Sligo"],["Dolphin's Barn","Dublin"],["Donaghadee","Down"],["Doody's Bottoms","Wicklow"],["Downings","Donegal"],["Dripsey","Cork"],["Dromcollogher","Limerick"],["Drumshanbo","Leitrim"],["Dundrum","Dublin"],["Dunkineely","Donegal"],["Edgeworthstown","Longford"],["Effin","Limerick"],["Emo","Laois"],["Engine Alley","Dublin"],["Feakle","Clare"],["Fishamble Street","Dublin"],["Fivemiletown","Tyrone"],["Four Roads","Roscommon"],["Frosses","Donegal"],["Fumbally Lane","Dublin"],["Geesala","Mayo"],["Glencolmcille","Donegal"],["Gneeveguilla","Kerry"],["Goatstown","Dublin"],["Golden","Tipperary"],["Graiguenamanagh","Kilkenny"],["Hackballscross","Louth"],["Hacketstown","Carlow"],["Harold's Cross","Dublin"],["Hollywood","Wicklow"],["Horetown","Wexford"],["Horse and Jockey","Tipperary"],["Horseleap","Westmeath"],["Hospital","Limerick"],["Inch","Kerry"],["Inchigeelagh","Cork"],["Inistioge","Kilkenny"],["Kesh","Fermanagh"],["Keshcarrigan","Leitrim"],["Kilfenora","Clare"],["Kill","Kildare"],["Killeshandra","Cavan"],["Kilmacanogue","Wicklow"],["Kilmacthomas","Waterford"],["Kilmuckridge","Wexford"],["Kilternan","Dublin"],["Kiltimagh","Mayo"],["Kiltyclogher","Leitrim"],["Kinnegad","Westmeath"],["Knock","Mayo"],["Knockcroghery","Roscommon"],["Knocknagoshel","Kerry"],["Knocknagree","Cork"],["Labasheeda","Clare"],["Leap","Cork"],["Leighlinbridge","Carlow"],["Lemybrien","Waterford"],["Letterfrack","Galway"],["Lisdoonvarna","Clare"],["Loughshinny","Dublin"],["Lusk","Dublin"],["Maam Cross","Galway"],["Magherafelt","Derry"],["Man O'War","Dublin"],["Manorhamilton","Leitrim"],["Marrowbone Lane","Dublin"],["Misery Hill","Dublin"],["Monasterevin","Kildare"],["Moneygall","Offaly"],["Mooncoin","Kilkenny"],["Moy","Tyrone"],["Muckanaghederdauhaulia","Galway"],["Muff","Donegal"],["Mutton Lane","Cork"],["New Inn","Tipperary"],["Newtowncunningham","Donegal"],["Newtownmountkennedy","Wicklow"],["Newtwopothouse","Cork"],["Ninemilehouse","Tipperary"],["Nobber","Meath"],["Old Parish","Waterford"],["Omeath","Louth"],["Oola","Limerick"],["Oughterard","Galway"],["Our Lady's Island","Wexford"],["Ovens","Cork"],["Palatine","Carlow"],["Pontoon","Mayo"],["Portaferry","Down"],["Poulpeasty","Wexford"],["Poyntzpass","Armagh"],["Prosperous","Kildare"],["Puckane","Tipperary"],["Puddingfield","Tipperary"],["Quilty","Clare"],["Rear Cross","Tipperary"],["Recess","Galway"],["Ring","Waterford"],["Rush","Dublin"],["Sallynoggin","Dublin"],["Schull","Cork"],["Shannon Harbour","Offaly"],["Shillelagh","Wicklow"],["Silvermines","Tipperary"],["Sixmilebridge","Clare"],["Sixmilecross","Tyrone"],["Skibbereen","Cork"],["Sneem","Kerry"],["Spanish Point","Clare"],["Stamullen","Meath"],["Stepaside","Dublin"],["Stoneybatter","Dublin"],["Stranooden","Monaghan"],["Stratford-on-Slaney","Wicklow"],["Strokestown","Roscommon"],["Swanlinbar","Cavan"],["Tagoat","Wexford"],["Templeglantine","Limerick"],["Tempo","Fermanagh"],["Termonfeckin","Louth"],["The Ballagh","Wexford"],["The Coombe","Dublin"],["The Naul","Dublin"],["The Neale","Mayo"],["The Ragg","Tipperary"],["The Rower","Kilkenny"],["The Swan","Laois"],["Tourmakeady","Mayo"],["Tubbercurry","Sligo"],["Two Mile Borris","Tipperary"],["Two Mile House","Kildare"],["Tyrrellspass","Westmeath"],["Upperchurch","Tipperary"],["Virginia","Cavan"],["Watergrasshill","Cork"],["Windgap","Kilkenny"],["Windy Arbour","Dublin"],["Windy Harbour","Meath"],["Winetavern Street","Dublin"],["Woodenbridge","Wicklow"]];
+const RF_FAKE = ["Annaghsplodge","Ardnaslippers","Aughnasheep","Bacon Lane","Badger's Elbow","Ballintrumpet","Ballydingle","Ballygobackwards","Ballygowayo","Ballyhiccup","Ballyhubbub","Ballykerfuffle","Ballymackerel","Ballynablaa","Ballynagrump","Ballynapooka","Ballynasniff","Ballyscallion","Ballyskiver","Ballyspud","Biscuit Hill","Blackpudding Row","Boherbanjo","Bridgetwice","Bucketstown","Bunnascuttery","Cabbage Cross","Cappanagooter","Carrickadoodle","Carrowhooley","Castlegrumble","Clonbuckle","Clonfiddle","Cloonawobble","Cloonfluff","Cobbler's Folly","Crooked Kettle","Crossnagrudge","Custardstown","Derrygiblet","Derrynasulk","Donkey's Rest","Drumfluther","Drumgobble","Drumnabiscuit","Drumsnooze","Duck's Puddle","Dunnamoggy","Dunwaffle","Eightmilepub","Fiddler's Itch","Fourmilepig","Frog's Leap","Gerald's Cross","Glenbothered","Glennaganzy","Goat and Bucket","Gortnagobdaw","Gortnaspanner","Granny's Gap","Gravy Cross","Gravy Lane","Great Fuss","Grief Hill","Grumblestown","Halfmile Cabbage","Hen and Chickens","Inchnabother","Inishfudge","Kettle Row","Kilbunion","Killawaffle","Killybiscuit","Killyhooley","Killyspoon","Kilmaggot","Kilnashambles","Kilwhinge","Kipper Alley","Knockatoddle","Knockeejit","Knocknaganache","Knocknahoolie","Knocknasprocket","Lettermuffin","Lisnafidget","Lisnagoogle","Lisnawellies","Little Hassle","Lower Bother","Magpie Alley","Moneyflump","Moneysniff","Mount Notions","Mullaghnatrousers","Newtownsandwich","Notions Avenue","Old Boot Lane","Old Sock","One Mile Onion","Pharmacy","Pig and Whistle","Piper's Wobble","Portnacustard","Priest's Elbow","Rasherstown","Rathnascone","Rathsniffle","Red Sock","Sausagestown","Second Thoughts","Sevenmilehouse","Sheepstown Lower","Slievenaboots","Soggy Bottom","Sorrow Hill","Sparrow Lane","Spoonstown","Stonyhatter","Sulky Lane","Tailor's Regret","Teapot Cross","Tenmilebridge","The Dregs","The Huff","The Lurch","The Sulk","The Wobble","Three Mile Turnip","Tinker's Sneeze","Tobernaspud","Tripe Alley","Trouser Lane","Tubberwobble","Tullybanjax","Tullynaslug","Turnip Hollow","Uncle's Bog","Upper Bother","Wet Sunday","Widow's Kettle","Wolfin's Barn"];
+const K_RF = "craicillion:realfake";
+const RF_OK = ["Maith thú!", "Sound!", "Deadly!", "Class!", "Go hiontach!", "Savage!"];
+let rf = null;
+const rfBest = () => store.get(K_RF, { best: 0 }).best || 0;
+function renderRealFakeFeature() { const b = rfBest(); $("#home-rf-best").textContent = b ? `🔥 Best: ${b}` : ""; }
+function rfStop() { if (rf) { cancelAnimationFrame(rf.raf); clearInterval(rf.iv); clearTimeout(rf.to); } }
+function startRealFake() {
+  track("realfake-start");
+  show("realfake"); rfStop();
+  $("#rf-over").hidden = true;
+  const sh = (a) => a.slice().sort(() => Math.random() - .5);
+  rf = { streak: 0, best: rfBest(), round: 0, real: sh(RF_REAL), fake: sh(RF_FAKE), phase: "idle", lost: null, lastReal: null, run: 0 };
+  $("#rf-best").textContent = `Best ${rf.best}`; $("#rf-streak").textContent = "🔥 0";
+  setSea(0); rfNext();
+}
+function rfNext() {
+  const sh = (a) => a.slice().sort(() => Math.random() - .5);
+  if (rf.real.length < 2) rf.real = sh(RF_REAL);
+  if (!rf.fake.length) rf.fake = sh(RF_FAKE);
+  const opts = [rf.real.pop(), rf.real.pop()].map(([name, county]) => ({ name, county, isReal: true }));
+  opts.push({ name: rf.fake.pop(), isReal: false });
+  rf.cur = { opts: sh(opts) }; rf.cur.fakeIdx = rf.cur.opts.findIndex((o) => !o.isReal);
+  rf.round++;
+  $("#rf-kicker").textContent = `Round ${rf.round}`;
+  $("#rf-msg").innerHTML = "";
+  document.querySelectorAll(".rf-opt").forEach((b, k) => { const o = rf.cur.opts[k];
+    b.className = "rf-opt rr-in" + (o.name.length > 16 ? " long" : ""); b.disabled = false;
+    b.querySelector(".rf-o-name").textContent = o.name; b.querySelector(".rf-o-sub").textContent = ""; });
+  rf.phase = "choosing"; rfTimer();
+}
+function rfTimer() {
+  rfStop();
+  const total = Math.max(5, 10 - Math.floor(rf.streak / 5)) * 1000, start = Date.now();
+  const fill = $("#rf-fill"), secs = $("#rf-secs"), air = $("#rf-air");
+  const tick = () => { if (!rf || rf.phase !== "choosing") return;
+    const left = Math.max(0, total - (Date.now() - start));
+    fill.style.transform = `scaleX(${left / total})`; secs.textContent = Math.ceil(left / 1000); air.classList.toggle("low", left < 2500);
+    if (left <= 0) return rfChoose(null);
+    rf.raf = requestAnimationFrame(tick); };
+  tick();
+  rf.iv = setInterval(() => { if (rf && rf.phase === "choosing" && Date.now() - start >= total) rfChoose(null); }, 200);
+}
+function rfChoose(k) {
+  if (!rf || rf.phase !== "choosing") return;
+  rf.phase = "reveal"; rfStop();
+  const c = rf.cur, right = k === c.fakeIdx;
+  document.querySelectorAll(".rf-opt").forEach((b, n) => { const o = c.opts[n];
+    b.disabled = true; b.classList.remove("rr-in"); b.classList.add("revealed", o.isReal ? "real" : "fake");
+    b.querySelector(".rf-o-sub").textContent = o.isReal ? `📍 Real · Co. ${o.county}` : "🙈 Fake! Séamus made it up";
+    if (n === k) b.classList.add(right ? "right" : "wrong");
+    if (!right && n === c.fakeIdx) b.classList.add("missed"); });
+  if (right) {
+    rf.streak++;
+    const st = $("#rf-streak"); st.textContent = `🔥 ${rf.streak}`; st.classList.remove("bump"); void st.offsetWidth; st.classList.add("bump");
+    if (rf.streak > rf.best) $("#rf-best").textContent = `Best ${rf.streak}`;
+    $("#rf-msg").innerHTML = `<span class="ga-line">${RF_OK[Math.floor(Math.random() * RF_OK.length)]}</span>`;
+    setSea(Math.min(7000, rf.streak * 200));
+    if (!reduceMotion) { const r = document.querySelectorAll(".rf-opt")[k].getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2, ["#3fd398", "#ffffff", "#7ff0d8"], 14, 120, 900); }
+    if (rf.streak % 10 === 0) { toast(`🔥 ${rf.streak} in a row! You know your townlands.`); if (navigator.vibrate) try { navigator.vibrate([40, 30, 90]); } catch {} }
+    rf.to = setTimeout(rfNext, 1500);
+  } else {
+    const picked = k === null ? null : c.opts[k];
+    rf.lost = { fake: c.opts[c.fakeIdx].name, picked, timeout: k === null };
+    $("#rf-msg").innerHTML = `<span class="ga-line">Mo léan…</span> <span class="muted">· ${k === null ? "Out of air!" : "That one's real, believe it or not."}</span>`;
+    if (navigator.vibrate) try { navigator.vibrate(120); } catch {}
+    rf.to = setTimeout(rfOver, 2200);
+  }
+}
+function rfOver() {
+  rfStop(); rf.phase = "over";
+  const prev = rfBest(), isBest = rf.streak > prev;
+  if (isBest) store.set(K_RF, { best: rf.streak });
+  rf.best = Math.max(prev, rf.streak);
+  $("#rf-final").textContent = rf.streak;
+  $("#rf-newbest").hidden = !(isBest && rf.streak > 0);
+  $("#rf-over-best").textContent = isBest ? (prev ? `Old best was ${prev}` : "Your first record!") : `Your best: ${rf.best}`;
+  const L = rf.lost;
+  $("#rf-lost").innerHTML = L ? (L.picked ? `<b>${esc(L.picked.name)}</b> is a real place in Co. ${esc(L.picked.county)}. Honestly.<br>The fake was <b>${esc(L.fake)}</b>.` : `The fake was <b>${esc(L.fake)}</b>.`) : "";
+  $("#rf-over").hidden = false;
+  if (isBest && rf.streak >= 5 && !reduceMotion) burst(innerWidth / 2, innerHeight * .35, ["#ffd27a", "#3fd398", "#ffffff"], 36, Math.min(innerWidth, innerHeight) * .45, 1400);
+  $("#rf-again").focus({ preventScroll: true });
+}
+function realFakeShareText() {
+  const L = rf.lost, caught = L ? (L.picked ? `Caught out by ${L.picked.name} (it's real, Co. ${L.picked.county}!)` : `Didn't spot ${L.fake} (totally made up)`) : "";
+  return `Craicillion · Real or Fake? 🦭\n🔥 ${rf.streak} Irish place names in a row${rf.streak >= rf.best && rf.streak > 0 ? " (personal best!)" : ""}\n${caught}\n${SHARE_URL}`;
+}
+
 /* ---------- Stats ---------- */
 const slimResults = (rs) => rs.map((r) => ({ id: r.id, a: r.a, tier: r.tier, pts: r.pts, status: r.status, input: r.input, tries: r.tries || [] }));
 function recordArchive() {
@@ -14714,6 +14924,18 @@ function init() {
   $("#res-home").onclick = renderHome;
   $("#share-btn").onclick = () => share();
   $("#rarer-btn").onclick = startRarer;
+  $("#realfake-btn").onclick = startRealFake;
+  document.querySelectorAll(".rf-opt").forEach((b) => (b.onclick = () => rfChoose(+b.dataset.i)));
+  $("#rf-again").onclick = startRealFake;
+  $("#rf-home").onclick = () => { rfStop(); renderHome(); };
+  $("#rf-quit").onclick = () => { rfStop(); if (rf) rf.phase = "idle"; renderHome(); };
+  $("#rf-share").onclick = () => share(realFakeShareText());
+  document.addEventListener("keydown", (e) => {
+    if (!$("#realfake").classList.contains("active") || document.querySelector(".modal.open") || !rf) return;
+    const k = e.key.toLowerCase();
+    if (rf.phase === "choosing" && ["1", "2", "3"].includes(k)) { e.preventDefault(); rfChoose(+k - 1); }
+    else if (rf.phase === "over" && k === "enter" && document.activeElement === document.body) { e.preventDefault(); startRealFake(); }
+  });
   $("#home-seal-wrap").onclick = seamusPoke;
   $("#home-seal-wrap").onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); seamusPoke(); } };
   seamusLoop(true);
@@ -14752,7 +14974,7 @@ function init() {
   if (!store.get("craicillion:seen-howto", false)) { store.set("craicillion:seen-howto", true); setTimeout(() => openModal("howto"), 350); }
   renderHome();
 }
-window.__craicillion = { phase: () => phase, rarerPool, percentileFor, norm, matchAnswer, promptIdsForDive, diveNumber, todayKey, dateForDive, PROMPTS, TIERS, shareText: () => shareText() };
+window.__craicillion = { RF_REAL, RF_FAKE, rfCur: () => rf && rf.cur, phase: () => phase, rarerPool, percentileFor, norm, matchAnswer, promptIdsForDive, diveNumber, todayKey, dateForDive, PROMPTS, TIERS, shareText: () => shareText() };
 init();
 </script>
 </body>
