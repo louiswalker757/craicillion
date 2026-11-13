@@ -13985,10 +13985,11 @@ function updateCountdowns() {
 function startDaily() {
   loadDaily(); mode = "daily";
   if (daily.done) return renderResults();
+  track(daily.idx > 0 ? "daily-resume" : "daily-start");
   enterGame();
 }
 function startFree() {
-  mode = "free";
+  mode = "free"; track("infinite-start");
   const order = PROMPTS.map((p) => p.id).sort(() => Math.random() - 0.5);
   free = { ids: order, idx: 0, results: [], used: [], round: 1, total: 0 };
   enterGame();
@@ -14102,7 +14103,7 @@ function resolve(input, timedOut, confirmed = false) {
   }
   stopTimer(); phase = "diving"; hint("");
   g.results.push(res); g.idx++;
-  if (mode === "daily") { if (g.idx >= g.ids.length) { g.done = true; recordStats(); } saveDaily(); }
+  if (mode === "daily") { if (g.idx >= g.ids.length) { g.done = true; recordStats(); track("daily-finish"); } saveDaily(); }
   if (mode === "archive" && g.idx >= g.ids.length) { g.done = true; recordArchive(); }
   playDive(p, res);
 }
@@ -14386,6 +14387,7 @@ function shareText() {
   return `Craicillion #${g.dive}${tag} 🦭\nDived ${m.toLocaleString("en-IE")}m — reached ${lm.name}\n${g.results.map((r) => (r.tier ? TIERS[r.tier].emoji : "❌")).join("")}\n${SHARE_URL}`;
 }
 async function share(text = shareText()) {
+  track(/Which is Rarer/.test(text) ? "share-rarer" : "share");
   try { await navigator.clipboard.writeText(text); return toast("Copied! Paste it in the group chat 🦭"); } catch {}
   try { const ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
     document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); if (ok) return toast("Copied! Paste it in the group chat 🦭"); } catch {}
@@ -14414,6 +14416,7 @@ function renderRarerFeature() {
   const b = rarerBest(); $("#home-rr-best").textContent = b ? `🔥 Your best: ${b} in a row` : "";
 }
 function startRarer() {
+  track("rarer-start");
   const pool = rarerPool();
   show("rarer"); rrStop();
   $("#rr-over").hidden = true;
@@ -14536,6 +14539,17 @@ function rarerShareText() {
   return `Craicillion · Which is Rarer? 🦭\n🔥 ${rr.streak} in a row${rr.streak >= rr.best && rr.streak > 0 ? " (personal best!)" : ""}\n${shown}❌\n${SHARE_URL}`;
 }
 
+/* ---------- Visitor counter (GoatCounter: free, no cookies, no personal data) ----------
+   Put your GoatCounter code here, e.g. "craicillion" for https://craicillion.goatcounter.com
+   Leave it empty to switch counting off. Only counts on the real site, never when testing. */
+const GOATCOUNTER_CODE = "craicillion";
+function startAnalytics() {
+  if (!GOATCOUNTER_CODE || !/craicillion\.ie$/.test(location.hostname)) return;
+  const sc = document.createElement("script"); sc.async = true; sc.src = "https://gc.zgo.at/count.js";
+  sc.dataset.goatcounter = `https://${GOATCOUNTER_CODE}.goatcounter.com/count`; document.head.appendChild(sc);
+}
+// Count an action (dive started, dive finished, shared...) as an event in the dashboard
+function track(name) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: name, title: name, event: true }); } catch {} }
 /* ---------- Feedback (mailto) ---------- */
 const FEEDBACK_EMAIL = "craicillion@gmail.com";
 function mailto(subject, body = "") {
@@ -14689,12 +14703,14 @@ function fitViewport() {
 
 /* ---------- Wire up ---------- */
 function init() {
+  startAnalytics();
   makeBubbles(); fillHowTo();
+  document.addEventListener("click", (e) => { const a = e.target.closest && e.target.closest('a[href^="mailto:"]'); if (a) track(a.classList.contains("res-report") ? "feedback-missing-answer" : "feedback"); });
   $("#start-btn").onclick = startDaily;
   $("#free-btn").onclick = startFree; $("#res-free").onclick = () => (mode === "free" ? continueFree() : startFree());
   $("#howto-btn").onclick = () => openModal("howto");
   $("#stats-btn").onclick = () => openModal("stats"); $("#res-stats").onclick = () => openModal("stats");
-  $("#archive-btn").onclick = () => openModal("archive"); $("#res-archive").onclick = () => openModal("archive");
+  $("#archive-btn").onclick = () => { track("archive-open"); openModal("archive"); }; $("#res-archive").onclick = () => openModal("archive");
   $("#res-home").onclick = renderHome;
   $("#share-btn").onclick = () => share();
   $("#rarer-btn").onclick = startRarer;
