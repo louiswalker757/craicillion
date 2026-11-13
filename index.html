@@ -182,6 +182,18 @@ form.answer{display:flex;gap:8px}
 #answer:focus{border-color:var(--accent)}
 #answer::placeholder{color:rgba(220,240,240,.5)}
 .hint{min-height:1.3em;margin-top:-4px;font-size:.92rem;color:#ffd2c9;font-weight:600}
+.dym{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;color:var(--ink);padding:9px 14px;border-radius:14px;animation:pop .35s cubic-bezier(.2,1.6,.4,1);
+  background:rgba(3,22,38,.55);border:1px solid rgba(127,240,216,.45);box-shadow:0 8px 20px -10px rgba(0,0,0,.5)}
+.dym b{color:var(--accent);font-size:1.02rem}
+.dym-q{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.dym s{color:var(--muted);font-weight:600;text-decoration-color:rgba(255,140,120,.8)}
+.dym-arrow{color:var(--muted)}
+.dym small{color:var(--muted);font-weight:600;font-size:.76rem;letter-spacing:.02em}
+.dym-btns{display:flex;gap:6px;margin-left:auto}
+.dym-btn{appearance:none;border:0;border-radius:999px;padding:7px 16px;font-weight:800;font-size:.88rem;cursor:pointer;touch-action:manipulation}
+.dym-btn.yes{background:linear-gradient(180deg,#a6fbe7,#4fd1bd);color:#03263a;box-shadow:0 3px 0 #1b7f78}
+.dym-btn.no{background:rgba(255,255,255,.1);color:var(--ink);border:1px solid var(--line)}
+.dym-btn:active{transform:translateY(2px)}
 .hint:empty{min-height:0;margin:0}
 .shake{animation:shake .35s}
 @keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
@@ -13995,7 +14007,7 @@ function nextPrompt() {
   if (mode === "daily" && g.idx >= g.ids.length) return finishDaily();
   const p = currentPrompt();
   phase = "answering";
-  diveToken++;
+  diveToken++; pending = null;
   const card = $("#prompt-card"); card.classList.remove("feedback", "hiding", "gone", "revealing", "zap-deadly", "zap-craic");
   if (!reduceMotion) { void card.offsetWidth; card.classList.add("revealing"); }
   $("#go").disabled = false;
@@ -14031,13 +14043,28 @@ function onSubmit(e) {
   if (phase === "feedback") return advance();
   if (phase !== "answering") return;
   const v = $("#answer").value;
+  if (pending) { // a "Did you mean…?" is showing: Enter on the same text means yes, new text replaces it
+    if (!norm(v) || norm(v) === norm(pending.name) || norm(v) === norm(pending.input)) return acceptPending();
+    pending = null;
+  }
   if (!norm(v)) { const i = $("#answer"); i.classList.remove("shake"); void i.offsetWidth; i.classList.add("shake"); return; }
   resolve(v, false);
 }
 let tries = []; // wrong guesses on the current prompt
+// A typo-corrected match ("Did you mean Carrauntoohil?") waiting for the player to say yes.
+// The air keeps running while it's showing; if it runs out, the suggestion is accepted.
+let pending = null;
+function acceptPending() { if (!pending) return; const pd = pending; pending = null; resolve(pd.input, false, true); }
+function showDidYouMean(typed, name) {
+  hint(`<span class="dym"><span class="dym-q"><s>“${esc(typed.trim())}”</s><span class="dym-arrow">→</span><b>${esc(name)}</b></span><small>Press Enter to confirm, or type something else</small></span>`);
+  const el = $("#answer"); el.value = name; el.focus({ preventScroll: true });
+  try { el.setSelectionRange(name.length, name.length); } catch {}
+}
 function hint(msg) { const h = $("#hint"); h.innerHTML = msg; h.classList.remove("pop"); void h.offsetWidth; h.classList.add("pop"); }
-function resolve(input, timedOut) {
+function resolve(input, timedOut, confirmed = false) {
   const g = cur(), p = currentPrompt();
+  if (timedOut && pending) { input = pending.input; timedOut = false; confirmed = true; } // out of air mid-question: take the suggestion
+  pending = null;
   let res = { id: p.id, input: input || tries[tries.length - 1] || "", a: null, tier: null, pts: 0, status: "timeout", tries: tries.slice() };
   if (!timedOut) {
     const m = matchAnswer(p, input);
@@ -14052,6 +14079,7 @@ function resolve(input, timedOut) {
                 : `<span class="ga-line">Mo léan…</span> “${esc(input.trim())}” isn't on the list. Go again!`);
       return;
     }
+    if (m.fuzzy && !confirmed) { pending = { input, i: m.i, name: ans.a }; showDidYouMean(input, ans.a); return; }
     res = { ...res, input, a: ans.a, tier: ans.tier, pts: TIERS[ans.tier].pts, status: "ok", fuzzy: m.fuzzy };
     if (mode === "free") g.used.push(keyOf(norm(ans.a)));
   }
