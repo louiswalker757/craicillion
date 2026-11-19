@@ -316,6 +316,7 @@ body.in-game .scene-snow{opacity:.55}
 .res-q{font-size:.8rem;color:var(--muted);grid-column:1/-1}
 .res-a{font-weight:700;overflow-wrap:anywhere}
 .res-a.miss{color:var(--muted);font-weight:500;font-style:italic}
+.res-num{display:block;color:var(--muted);font-weight:500;font-style:normal;font-size:.85rem;margin-top:2px}
 .all{grid-column:1/-1;margin-top:6px}
 .all summary{cursor:pointer;font-size:.85rem;font-weight:700;color:var(--accent);list-style:none;display:inline-flex;align-items:center;gap:6px;padding:4px 0}
 .all summary::-webkit-details-marker{display:none}
@@ -898,7 +899,7 @@ html.touch .mini-kb{display:flex;flex-direction:column;gap:7px;margin-top:auto;f
       <div class="q">
         <div class="kicker" id="kicker">Prompt 1 of 7</div>
         <p class="prompt-text" id="prompt-text">…</p>
-        <div class="prompt-sub">One answer. The rarer, the deeper.</div>
+        <div class="prompt-sub" id="prompt-sub">One answer. The rarer, the deeper.</div>
       </div>
       <div class="fb" id="fb"></div>
     </div>
@@ -1079,6 +1080,7 @@ html.touch .mini-kb{display:flex;flex-direction:column;gap:7px;margin-top:auto;f
       <li>Depth = points × 10 metres. Max is <b>700 points / 7,000 m</b>.</li>
       <li>Not on the list? <b>Go again</b>, but the air keeps draining. Run out of air = <b>0</b>.</li>
       <li>Fadas, capitals, typos, nicknames and half-names (“Sexton”, “Blarney”) are all grand.</li>
+      <li>Some prompts are <b>number questions</b> (“How tall is Carrauntoohil?”). You get <b>one guess</b>, and <b>the closer you are, the rarer the tier</b>. “82,300”, “82k” and “1.2m” all work.</li>
     </ul>
     <table class="tier-table" id="tier-table"></table>
     <h3 style="margin:16px 0 4px;font-size:1rem">Landmarks on the way down</h3>
@@ -1131,7 +1133,23 @@ const PINNED_DIVES = {
 };
 // Days that have already been played are frozen here forever, so adding or removing
 // prompts never changes a past dive (or today's). Only days after these get reshuffled.
-const LOCKED_DIVES = {"1":["stadiums","actors","dubbuildings","dubswims","dubslang","surnames","loiclubs"],"2":["dogs","u2","firstnames","media","hiberno","brands","shops"],"3":["tvfilm","gaanicknames","plants","cranberries","dubfamous","fry","tiktokers"],"4":["spuds","dartluas","colleges","sportstars","biscuits","livestock","dinner"]};
+const LOCKED_DIVES = {"1":["stadiums","actors","dubbuildings","dubswims","dubslang","surnames","loiclubs"],"2":["dogs","u2","firstnames","media","hiberno","brands","shops"],"3":["tvfilm","gaanicknames","plants","cranberries","dubfamous","fry","tiktokers"],"4":["spuds","dartluas","colleges","sportstars","biscuits","livestock","dinner"],
+"5":["lcsubjects","crisps","dublinareas","trad","gaeilgebasics","beaches","parks"],
+"6":["counties","sweets","comedians","deli","festivals","presenters","rugby"],
+"7":["exclamations","dublinstreets","slanggood","trains","towns","dubshopping","chipper"],
+"8":["tractors","soccer","dubvenues","dubroads","eurovision","weather","landmarks"],
+"9":["saints","dubschools","chocbar","bandmembers","objectsgaeilge","musicians","schoolirish"]};
+// Number questions ("How tall is Carrauntoohil?") are mixed into every dive from this one on.
+const NUMBERS_FROM_DIVE = 10;
+const NUMBERS_PER_DIVE = [2, 3];        // fewest and most number questions in a dive (picked per day, the same for everyone)
+const NO_REPEAT_DAYS = 10;              // a prompt is never used again within this many days of its last outing
+// How close a number guess must be for each tier, rarest first:
+//            [craic,  deadly, savage, sound, notions, sure]   (further off than "sure" = a miss)
+const NUMBER_BANDS = {
+  pct: [0.01, 0.03, 0.07, 0.15, 0.25, 0.40],   // fraction off: |guess − answer| / answer  (default)
+  log: [0.01, 0.03, 0.07, 0.15, 0.25, 0.40],   // gap between log10(guess) and log10(answer), for huge numbers
+  abs: [0, 1, 3, 6, 10, 15],                   // plain difference; the default suits years. Set `bands` per question for counts
+};
 
 /* =====================================================================
    PROMPTS · the question bank
@@ -1154,7 +1172,32 @@ const LOCKED_DIVES = {"1":["stadiums","actors","dubbuildings","dubswims","dubsla
    To add a prompt: copy one block, give it a new id, keep 40+ answers
    and use every tier at least once. Append new prompts to the END of the
    list. Changing the size of the list reshuffles future dives (today's
-   dive is saved, so nobody's game in progress changes).
+   dive is saved, so nobody's game in progress changes; days already in
+   LOCKED_DIVES never change).
+
+   Retiring a prompt:  add  retired: true  instead of deleting it. It's
+   never scheduled for a future day, but locked past days that used it
+   (and the archive) still find it. Deleting a prompt that a locked day
+   uses would leave that day short.
+
+   NUMBER questions (prompts with no `type` are word prompts like above):
+     { id: "carrauntoohil", type: "number",
+       prompt: "How tall is Carrauntoohil, in metres?",
+       answer: 1038,                  // the one true answer
+       unit: "m",                     // optional: shown after the answer
+                                      //   ("£" and "€" go in front)
+       mode: "pct",                   // how closeness is measured:
+                                      //   "pct" (default) % off the answer
+                                      //   "abs" plain difference (years, small counts)
+                                      //   "log" log10 gap (populations, huge numbers)
+       bands: [0, 1, 3, 6, 10, 15],   // optional: how far off is allowed for
+                                      //   [craic, deadly, savage, sound, notions, sure];
+                                      //   defaults are NUMBER_BANDS at the top
+       year: true }                   // optional: the answer is a year (shown
+                                      //   as "1954", not "1,954")
+   The closer the guess, the rarer the tier (same points as word answers).
+   Further off than the "sure" band is a miss. Only use facts with one clear
+   answer that won't change soon (no league tables or live stats).
    ===================================================================== */
 const PROMPTS = [
   { id: "counties", prompt: "Name an Irish county", ignore: ["county", "co"], answers: [
@@ -3212,7 +3255,7 @@ const PROMPTS = [
     { a: "Ar scáth a chéile a mhaireann na daoine", tier: "craic", aliases: [] },
     { a: "Aithníonn ciaróg ciaróg eile", tier: "craic", aliases: [] },
   ] },
-  { id: "gaeilgebasics", prompt: "Name a day, month, colour or number as Gaeilge", answers: [
+  { id: "gaeilgebasics", retired: true, prompt: "Name a day, month, colour or number as Gaeilge", answers: [
     { a: "Dearg", tier: "sure", aliases: [] },
     { a: "Gorm", tier: "sure", aliases: [] },
     { a: "Glas", tier: "sure", aliases: [] },
@@ -10670,7 +10713,7 @@ const PROMPTS = [
     { a: "Quail Egg", tier: "craic", aliases: ["Quail Eggs"] },
     { a: "Inch House", tier: "craic", aliases: [] },
   ] },
-  { id: "foodgaeilge", prompt: "Name a food or drink as Gaeilge", answers: [
+  { id: "foodgaeilge", retired: true, prompt: "Name a food or drink as Gaeilge", answers: [
     { a: "Arán", tier: "sure", aliases: [] },
     { a: "Bainne", tier: "sure", aliases: [] },
     { a: "Uisce", tier: "sure", aliases: [] },
@@ -10826,7 +10869,7 @@ const PROMPTS = [
     { a: "Praiseach", tier: "craic", aliases: [] },
     { a: "Leamhnacht", tier: "craic", aliases: [] },
   ] },
-  { id: "animalsgaeilge", prompt: "Name an animal as Gaeilge", answers: [
+  { id: "animalsgaeilge", retired: true, prompt: "Name an animal as Gaeilge", answers: [
     { a: "Madra", tier: "sure", aliases: ["Madraí", "Gadhar"] },
     { a: "Cat", tier: "sure", aliases: [] },
     { a: "Capall", tier: "sure", aliases: [] },
@@ -10975,7 +11018,7 @@ const PROMPTS = [
     { a: "Cadhan", tier: "craic", aliases: [] },
     { a: "Bonnán", tier: "craic", aliases: [] },
   ] },
-  { id: "objectsgaeilge", prompt: "Name an everyday object as Gaeilge (house, school, anything)", answers: [
+  { id: "objectsgaeilge", retired: true, prompt: "Name an everyday object as Gaeilge (house, school, anything)", answers: [
     { a: "Peann", tier: "sure", aliases: [] },
     { a: "Leabhar", tier: "sure", aliases: [] },
     { a: "Cathaoir", tier: "sure", aliases: [] },
@@ -11155,7 +11198,7 @@ const PROMPTS = [
     { a: "Píopa", tier: "craic", aliases: [] },
     { a: "Tlú", tier: "craic", aliases: [] },
   ] },
-  { id: "peoplegaeilge", prompt: "Name a person, job or family member as Gaeilge", answers: [
+  { id: "peoplegaeilge", retired: true, prompt: "Name a person, job or family member as Gaeilge", answers: [
     { a: "Mamaí", tier: "sure", aliases: ["Mam"] },
     { a: "Daidí", tier: "sure", aliases: ["Daid"] },
     { a: "Múinteoir", tier: "sure", aliases: [] },
@@ -13546,6 +13589,1204 @@ const PROMPTS = [
     { a: "Does He Know", tier: "craic", aliases: [] },
     { a: "Something Great", tier: "craic", aliases: [] },
   ] },
+  // ---------- More word prompts ----------
+  { id: "gaaplayers", prompt: "Name a hurler or Gaelic footballer (men's or women's, past or present)", answers: [
+    { a: "Henry Shefflin", tier: "sure", aliases: ["King Henry"] },
+    { a: "Joe Canning", tier: "sure", aliases: [] },
+    { a: "David Clifford", tier: "sure", aliases: [] },
+    { a: "Stephen Cluxton", tier: "sure", aliases: [] },
+    { a: "Colm Cooper", tier: "notions", aliases: ["Gooch", "The Gooch", "Gooch Cooper"] },
+    { a: "DJ Carey", tier: "notions", aliases: ["D.J. Carey"] },
+    { a: "Brian Fenton", tier: "sound", aliases: [] },
+    { a: "Con O'Callaghan", tier: "sound", aliases: [] },
+    { a: "Ciarán Kilkenny", tier: "sound", aliases: [] },
+    { a: "Bernard Brogan", tier: "sound", aliases: [] },
+    { a: "Diarmuid Connolly", tier: "sound", aliases: [] },
+    { a: "Paul Mannion", tier: "sound", aliases: [] },
+    { a: "Jack McCaffrey", tier: "sound", aliases: [] },
+    { a: "James McCarthy", tier: "sound", aliases: [] },
+    { a: "Philly McMahon", tier: "sound", aliases: [] },
+    { a: "Michael Darragh Macauley", tier: "sound", aliases: [] },
+    { a: "Dean Rock", tier: "sound", aliases: [] },
+    { a: "Kieran Donaghy", tier: "sound", aliases: ["Star Donaghy"] },
+    { a: "Paul Galvin", tier: "sound", aliases: [] },
+    { a: "Tomás Ó Sé", tier: "sound", aliases: [] },
+    { a: "Darragh Ó Sé", tier: "sound", aliases: [] },
+    { a: "Marc Ó Sé", tier: "sound", aliases: [] },
+    { a: "Seán Cavanagh", tier: "sound", aliases: [] },
+    { a: "Peter Canavan", tier: "sound", aliases: [] },
+    { a: "Aidan O'Shea", tier: "sound", aliases: [] },
+    { a: "Lee Keegan", tier: "sound", aliases: [] },
+    { a: "Cillian O'Connor", tier: "sound", aliases: [] },
+    { a: "Andy Moran", tier: "sound", aliases: [] },
+    { a: "Michael Murphy", tier: "sound", aliases: [] },
+    { a: "Seán O'Shea", tier: "sound", aliases: [] },
+    { a: "Paudie Clifford", tier: "sound", aliases: [] },
+    { a: "Shane Walsh", tier: "sound", aliases: [] },
+    { a: "Damien Comer", tier: "sound", aliases: [] },
+    { a: "TJ Reid", tier: "sound", aliases: ["T.J. Reid"] },
+    { a: "Tommy Walsh", tier: "sound", aliases: [] },
+    { a: "Richie Hogan", tier: "sound", aliases: [] },
+    { a: "Seamus Callanan", tier: "sound", aliases: ["Bonner Callanan"] },
+    { a: "Cian Lynch", tier: "sound", aliases: [] },
+    { a: "Aaron Gillane", tier: "sound", aliases: [] },
+    { a: "Gearóid Hegarty", tier: "sound", aliases: [] },
+    { a: "Tony Kelly", tier: "sound", aliases: [] },
+    { a: "Austin Gleeson", tier: "sound", aliases: [] },
+    { a: "Christy Ring", tier: "sound", aliases: [] },
+    { a: "Cora Staunton", tier: "sound", aliases: [] },
+    { a: "Jason Sherlock", tier: "sound", aliases: [] },
+    { a: "Patrick Horgan", tier: "sound", aliases: [] },
+    { a: "Lar Corbett", tier: "sound", aliases: [] },
+    { a: "Davy Fitzgerald", tier: "sound", aliases: [] },
+    { a: "Brian Cody", tier: "sound", aliases: [] },
+    { a: "Jim Gavin", tier: "sound", aliases: [] },
+    { a: "Mick O'Dwyer", tier: "sound", aliases: [] },
+    { a: "Pat Spillane", tier: "sound", aliases: [] },
+    { a: "Joe Brolly", tier: "sound", aliases: [] },
+    { a: "Seán Óg Ó hAilpín", tier: "sound", aliases: [] },
+    { a: "Alan Brogan", tier: "savage", aliases: [] },
+    { a: "Paddy Andrews", tier: "savage", aliases: [] },
+    { a: "Cormac Costello", tier: "savage", aliases: [] },
+    { a: "Rory O'Carroll", tier: "savage", aliases: [] },
+    { a: "Jonny Cooper", tier: "savage", aliases: [] },
+    { a: "John Small", tier: "savage", aliases: [] },
+    { a: "Ciarán Whelan", tier: "savage", aliases: [] },
+    { a: "Kevin Heffernan", tier: "savage", aliases: [] },
+    { a: "Jimmy Keaveney", tier: "savage", aliases: [] },
+    { a: "Brian Mullins", tier: "savage", aliases: [] },
+    { a: "Charlie Redmond", tier: "savage", aliases: [] },
+    { a: "Mikey Sheehy", tier: "savage", aliases: [] },
+    { a: "Jack O'Shea", tier: "savage", aliases: [] },
+    { a: "Eoin Liston", tier: "savage", aliases: ["Bomber Liston", "The Bomber"] },
+    { a: "Páidí Ó Sé", tier: "savage", aliases: [] },
+    { a: "Maurice Fitzgerald", tier: "savage", aliases: [] },
+    { a: "Declan O'Sullivan", tier: "savage", aliases: [] },
+    { a: "James O'Donoghue", tier: "savage", aliases: [] },
+    { a: "Keith Higgins", tier: "savage", aliases: [] },
+    { a: "Colm Boyle", tier: "savage", aliases: [] },
+    { a: "Kevin McLoughlin", tier: "savage", aliases: [] },
+    { a: "Ciarán McDonald", tier: "savage", aliases: [] },
+    { a: "Karl Lacey", tier: "savage", aliases: [] },
+    { a: "Paddy McBrearty", tier: "savage", aliases: [] },
+    { a: "Ryan McHugh", tier: "savage", aliases: [] },
+    { a: "Colm McFadden", tier: "savage", aliases: [] },
+    { a: "Kieran McGeeney", tier: "savage", aliases: [] },
+    { a: "Oisín McConville", tier: "savage", aliases: [] },
+    { a: "Steven McDonnell", tier: "savage", aliases: [] },
+    { a: "Stephen O'Neill", tier: "savage", aliases: [] },
+    { a: "Owen Mulligan", tier: "savage", aliases: [] },
+    { a: "Brian Dooher", tier: "savage", aliases: [] },
+    { a: "Conor McManus", tier: "savage", aliases: [] },
+    { a: "Pádraic Joyce", tier: "savage", aliases: [] },
+    { a: "Graham Canty", tier: "savage", aliases: [] },
+    { a: "Larry Tompkins", tier: "savage", aliases: [] },
+    { a: "Graham Geraghty", tier: "savage", aliases: [] },
+    { a: "Trevor Giles", tier: "savage", aliases: [] },
+    { a: "Colm O'Rourke", tier: "savage", aliases: [] },
+    { a: "Shane McGuigan", tier: "savage", aliases: [] },
+    { a: "Rian O'Neill", tier: "savage", aliases: [] },
+    { a: "Jamie Clarke", tier: "savage", aliases: [] },
+    { a: "Eddie Brennan", tier: "savage", aliases: [] },
+    { a: "JJ Delaney", tier: "savage", aliases: ["J.J. Delaney"] },
+    { a: "Jackie Tyrrell", tier: "savage", aliases: [] },
+    { a: "Michael Fennelly", tier: "savage", aliases: [] },
+    { a: "Eoin Larkin", tier: "savage", aliases: [] },
+    { a: "Noel McGrath", tier: "savage", aliases: [] },
+    { a: "John O'Dwyer", tier: "savage", aliases: ["Bubbles O'Dwyer", "Bubbles"] },
+    { a: "Pádraic Maher", tier: "savage", aliases: [] },
+    { a: "Brendan Maher", tier: "savage", aliases: [] },
+    { a: "Nicky English", tier: "savage", aliases: [] },
+    { a: "Eoin Kelly", tier: "savage", aliases: [] },
+    { a: "Brendan Cummins", tier: "savage", aliases: [] },
+    { a: "Kyle Hayes", tier: "savage", aliases: [] },
+    { a: "Declan Hannon", tier: "savage", aliases: [] },
+    { a: "Seamus Flanagan", tier: "savage", aliases: [] },
+    { a: "Diarmaid Byrnes", tier: "savage", aliases: [] },
+    { a: "Nickie Quaid", tier: "savage", aliases: [] },
+    { a: "Shane O'Donnell", tier: "savage", aliases: [] },
+    { a: "Podge Collins", tier: "savage", aliases: [] },
+    { a: "Jamesie O'Connor", tier: "savage", aliases: [] },
+    { a: "Brian Lohan", tier: "savage", aliases: [] },
+    { a: "Anthony Daly", tier: "savage", aliases: [] },
+    { a: "Ger Loughnane", tier: "savage", aliases: [] },
+    { a: "Conor Whelan", tier: "savage", aliases: [] },
+    { a: "David Burke", tier: "savage", aliases: [] },
+    { a: "Joe Cooney", tier: "savage", aliases: [] },
+    { a: "Jimmy Barry-Murphy", tier: "savage", aliases: [] },
+    { a: "Dónal Óg Cusack", tier: "savage", aliases: [] },
+    { a: "Joe Deane", tier: "savage", aliases: [] },
+    { a: "Brian Corcoran", tier: "savage", aliases: [] },
+    { a: "Diarmuid O'Sullivan", tier: "savage", aliases: ["The Rock"] },
+    { a: "Ken McGrath", tier: "savage", aliases: [] },
+    { a: "John Mullane", tier: "savage", aliases: [] },
+    { a: "Dan Shanahan", tier: "savage", aliases: [] },
+    { a: "Tony Browne", tier: "savage", aliases: [] },
+    { a: "Lee Chin", tier: "savage", aliases: [] },
+    { a: "Briege Corkery", tier: "savage", aliases: [] },
+    { a: "Rena Buckley", tier: "savage", aliases: [] },
+    { a: "Sinéad Goldrick", tier: "savage", aliases: [] },
+    { a: "Sarah Rowe", tier: "savage", aliases: [] },
+    { a: "Vikki Wall", tier: "savage", aliases: [] },
+    { a: "Ashling Thompson", tier: "savage", aliases: [] },
+    { a: "Hannah Tyrrell", tier: "savage", aliases: [] },
+    { a: "Sinéad Aherne", tier: "savage", aliases: [] },
+    { a: "Daithí Burke", tier: "deadly", aliases: [] },
+    { a: "Gearóid McInerney", tier: "deadly", aliases: [] },
+    { a: "Ollie Canning", tier: "deadly", aliases: [] },
+    { a: "Ben O'Connor", tier: "deadly", aliases: [] },
+    { a: "Ray Cummins", tier: "deadly", aliases: [] },
+    { a: "Seamus Harnedy", tier: "deadly", aliases: [] },
+    { a: "Darragh Fitzgibbon", tier: "deadly", aliases: [] },
+    { a: "Mark Coleman", tier: "deadly", aliases: [] },
+    { a: "Alan Cadogan", tier: "deadly", aliases: [] },
+    { a: "Paul Flynn", tier: "deadly", aliases: [] },
+    { a: "Stephen Bennett", tier: "deadly", aliases: [] },
+    { a: "Jamie Barron", tier: "deadly", aliases: [] },
+    { a: "Liam Dunne", tier: "deadly", aliases: [] },
+    { a: "Conal Keaney", tier: "deadly", aliases: [] },
+    { a: "Neil McManus", tier: "deadly", aliases: [] },
+    { a: "Brian Whelahan", tier: "deadly", aliases: [] },
+    { a: "Johnny Dooley", tier: "deadly", aliases: [] },
+    { a: "Joe Dooley", tier: "deadly", aliases: [] },
+    { a: "Jason Forde", tier: "deadly", aliases: [] },
+    { a: "Ronan Maher", tier: "deadly", aliases: [] },
+    { a: "Babs Keating", tier: "deadly", aliases: [] },
+    { a: "Jimmy Doyle", tier: "deadly", aliases: [] },
+    { a: "Mick Mackey", tier: "deadly", aliases: [] },
+    { a: "Ciarán Carey", tier: "deadly", aliases: [] },
+    { a: "Adrian Mullen", tier: "deadly", aliases: [] },
+    { a: "Eoin Cody", tier: "deadly", aliases: [] },
+    { a: "Ogie Moran", tier: "deadly", aliases: [] },
+    { a: "John Egan", tier: "deadly", aliases: [] },
+    { a: "Mike Frank Russell", tier: "deadly", aliases: [] },
+    { a: "Willie Joe Padden", tier: "deadly", aliases: [] },
+    { a: "Seán Purcell", tier: "deadly", aliases: [] },
+    { a: "Dermot Earley", tier: "deadly", aliases: [] },
+    { a: "Anthony Tohill", tier: "deadly", aliases: [] },
+    { a: "James McCartan", tier: "deadly", aliases: [] },
+    { a: "Matt Connor", tier: "deadly", aliases: [] },
+    { a: "Lyndsey Davey", tier: "deadly", aliases: [] },
+    { a: "Carla Rowe", tier: "deadly", aliases: [] },
+    { a: "Niamh McEvoy", tier: "deadly", aliases: [] },
+    { a: "Aimee Mackin", tier: "deadly", aliases: [] },
+    { a: "Valerie Mulcahy", tier: "deadly", aliases: [] },
+    { a: "Juliet Murphy", tier: "deadly", aliases: [] },
+    { a: "Emma Duggan", tier: "deadly", aliases: [] },
+    { a: "Bríd Stack", tier: "deadly", aliases: [] },
+    { a: "Angela Downey", tier: "craic", aliases: [] },
+    { a: "Ann Downey", tier: "craic", aliases: [] },
+    { a: "Denise Gaule", tier: "craic", aliases: [] },
+    { a: "Orla Cotter", tier: "craic", aliases: [] },
+    { a: "Nollaig Cleary", tier: "craic", aliases: [] },
+    { a: "Billy Dooley", tier: "craic", aliases: [] },
+    { a: "Johnny Pilkington", tier: "craic", aliases: [] },
+    { a: "Cathal McCarron", tier: "craic", aliases: [] },
+    { a: "Enda Smith", tier: "craic", aliases: [] },
+    { a: "Kevin Moran", tier: "craic", aliases: [] },
+    { a: "Jack Lynch", tier: "craic", aliases: [] },
+    { a: "Tony Doran", tier: "craic", aliases: [] },
+    { a: "Eddie Keher", tier: "craic", aliases: [] },
+    { a: "Nicky Rackard", tier: "craic", aliases: [] },
+    { a: "Frank Cummins", tier: "craic", aliases: [] },
+    { a: "Pat Fox", tier: "craic", aliases: [] },
+  ] },
+  { id: "irishsongs", prompt: "Name a song every Irish person knows the words to", ignore: ["song"], answers: [
+    { a: "The Fields of Athenry", tier: "sure", aliases: ["Fields of Athenry", "Athenry"] },
+    { a: "Galway Girl", tier: "sure", aliases: [] },
+    { a: "Zombie", tier: "sure", aliases: [] },
+    { a: "Amhrán na bhFiann", tier: "sure", aliases: ["The Soldier's Song", "Soldiers Song", "National Anthem", "Irish national anthem"] },
+    { a: "Mr Brightside", tier: "notions", aliases: ["Mr. Brightside"] },
+    { a: "The Rattlin' Bog", tier: "notions", aliases: ["Rattlin Bog", "Rattling Bog"] },
+    { a: "Molly Malone", tier: "sound", aliases: ["Cockles and Mussels"] },
+    { a: "The Wild Rover", tier: "sound", aliases: ["Wild Rover"] },
+    { a: "Whiskey in the Jar", tier: "sound", aliases: [] },
+    { a: "Dirty Old Town", tier: "sound", aliases: [] },
+    { a: "Fairytale of New York", tier: "sound", aliases: [] },
+    { a: "Grace", tier: "sound", aliases: [] },
+    { a: "Danny Boy", tier: "sound", aliases: [] },
+    { a: "The Irish Rover", tier: "sound", aliases: ["Irish Rover"] },
+    { a: "Rocky Road to Dublin", tier: "sound", aliases: [] },
+    { a: "Nothing Compares 2 U", tier: "sound", aliases: ["Nothing Compares to You"] },
+    { a: "Linger", tier: "sound", aliases: [] },
+    { a: "Dreams", tier: "sound", aliases: [] },
+    { a: "Take Me to Church", tier: "sound", aliases: [] },
+    { a: "Sweet Caroline", tier: "sound", aliases: [] },
+    { a: "Ireland's Call", tier: "sound", aliases: [] },
+    { a: "The Town I Loved So Well", tier: "sound", aliases: [] },
+    { a: "Raglan Road", tier: "sound", aliases: ["On Raglan Road"] },
+    { a: "Carrickfergus", tier: "sound", aliases: [] },
+    { a: "The Black Velvet Band", tier: "sound", aliases: ["Black Velvet Band"] },
+    { a: "The Foggy Dew", tier: "sound", aliases: ["Foggy Dew"] },
+    { a: "Óró Sé do Bheatha 'Bhaile", tier: "sound", aliases: ["Oro Se Do Bheatha Bhaile", "Oro"] },
+    { a: "Beautiful Day", tier: "sound", aliases: [] },
+    { a: "With or Without You", tier: "sound", aliases: [] },
+    { a: "Sunday Bloody Sunday", tier: "sound", aliases: [] },
+    { a: "Flying Without Wings", tier: "sound", aliases: [] },
+    { a: "Swear It Again", tier: "sound", aliases: [] },
+    { a: "You Raise Me Up", tier: "sound", aliases: [] },
+    { a: "Uptown Girl", tier: "sound", aliases: [] },
+    { a: "Love Me for a Reason", tier: "sound", aliases: [] },
+    { a: "Put 'Em Under Pressure", tier: "sound", aliases: ["Put Em Under Pressure"] },
+    { a: "Olé Olé Olé", tier: "sound", aliases: ["Ole Ole Ole"] },
+    { a: "My Lovely Horse", tier: "sound", aliases: [] },
+    { a: "Horse Outside", tier: "sound", aliases: [] },
+    { a: "The Boys Are Back in Town", tier: "sound", aliases: ["Boys Are Back in Town"] },
+    { a: "Teenage Kicks", tier: "sound", aliases: [] },
+    { a: "Wonderwall", tier: "sound", aliases: [] },
+    { a: "Take Me Home, Country Roads", tier: "sound", aliases: ["Country Roads"] },
+    { a: "Maniac 2000", tier: "sound", aliases: [] },
+    { a: "Dublin in the Rare Auld Times", tier: "sound", aliases: ["Rare Ould Times", "The Rare Auld Times"] },
+    { a: "Come Out Ye Black and Tans", tier: "savage", aliases: [] },
+    { a: "The Auld Triangle", tier: "savage", aliases: [] },
+    { a: "Spancil Hill", tier: "savage", aliases: [] },
+    { a: "Only Our Rivers Run Free", tier: "savage", aliases: [] },
+    { a: "A Nation Once Again", tier: "savage", aliases: [] },
+    { a: "The Parting Glass", tier: "savage", aliases: [] },
+    { a: "Mo Ghile Mear", tier: "savage", aliases: [] },
+    { a: "Star of the County Down", tier: "savage", aliases: [] },
+    { a: "The Mountains of Mourne", tier: "savage", aliases: [] },
+    { a: "The Rose of Tralee", tier: "savage", aliases: [] },
+    { a: "Red Is the Rose", tier: "savage", aliases: [] },
+    { a: "Finnegan's Wake", tier: "savage", aliases: ["Finnegans Wake"] },
+    { a: "Weila Waile", tier: "savage", aliases: ["Weela Weela Walya"] },
+    { a: "The Ferryman", tier: "savage", aliases: [] },
+    { a: "Lanigan's Ball", tier: "savage", aliases: [] },
+    { a: "Nancy Spain", tier: "savage", aliases: [] },
+    { a: "Thousands Are Sailing", tier: "savage", aliases: [] },
+    { a: "The Galway Shawl", tier: "savage", aliases: [] },
+    { a: "Boolavogue", tier: "savage", aliases: [] },
+    { a: "The West's Awake", tier: "savage", aliases: [] },
+    { a: "Ride On", tier: "savage", aliases: [] },
+    { a: "Lisdoonvarna", tier: "savage", aliases: [] },
+    { a: "Báidín Fheilimí", tier: "savage", aliases: ["Baidin Fheilimi"] },
+    { a: "Trasna na dTonnta", tier: "savage", aliases: [] },
+    { a: "Dúlamán", tier: "savage", aliases: [] },
+    { a: "An Poc ar Buile", tier: "savage", aliases: [] },
+    { a: "Ode to My Family", tier: "savage", aliases: [] },
+    { a: "Breathless", tier: "savage", aliases: [] },
+    { a: "Runaway", tier: "savage", aliases: [] },
+    { a: "Chasing Cars", tier: "savage", aliases: [] },
+    { a: "Hall of Fame", tier: "savage", aliases: [] },
+    { a: "The Man Who Can't Be Moved", tier: "savage", aliases: [] },
+    { a: "All I Want", tier: "savage", aliases: [] },
+    { a: "Slow Hands", tier: "savage", aliases: [] },
+    { a: "What Makes You Beautiful", tier: "savage", aliases: [] },
+    { a: "Story of My Life", tier: "savage", aliases: [] },
+    { a: "Orinoco Flow", tier: "savage", aliases: ["Sail Away"] },
+    { a: "Outnumbered", tier: "savage", aliases: [] },
+    { a: "Hold Me Now", tier: "savage", aliases: [] },
+    { a: "What's Another Year", tier: "savage", aliases: [] },
+    { a: "All Kinds of Everything", tier: "savage", aliases: [] },
+    { a: "Rock 'n' Roll Kids", tier: "savage", aliases: [] },
+    { a: "Summer in Dublin", tier: "savage", aliases: [] },
+    { a: "N17", tier: "savage", aliases: [] },
+    { a: "I Useta Lover", tier: "savage", aliases: [] },
+    { a: "Where's Me Jumper", tier: "savage", aliases: [] },
+    { a: "Brown Eyed Girl", tier: "savage", aliases: [] },
+    { a: "I Don't Like Mondays", tier: "savage", aliases: [] },
+    { a: "Words", tier: "savage", aliases: [] },
+    { a: "No Matter What", tier: "savage", aliases: [] },
+    { a: "World of Our Own", tier: "savage", aliases: [] },
+    { a: "C'est la Vie", tier: "savage", aliases: [] },
+    { a: "Lipstick", tier: "savage", aliases: [] },
+    { a: "Too Sweet", tier: "savage", aliases: [] },
+    { a: "Saturday Night", tier: "savage", aliases: [] },
+    { a: "Rock the Boat", tier: "savage", aliases: [] },
+    { a: "Livin' on a Prayer", tier: "savage", aliases: ["Living on a Prayer"] },
+    { a: "Don't Look Back in Anger", tier: "savage", aliases: [] },
+    { a: "Happy Birthday", tier: "savage", aliases: [] },
+    { a: "The Rose of Mooncoin", tier: "savage", aliases: [] },
+    { a: "Slievenamon", tier: "savage", aliases: [] },
+    { a: "The Banks of My Own Lovely Lee", tier: "savage", aliases: ["The Banks"] },
+    { a: "Limerick, You're a Lady", tier: "savage", aliases: [] },
+    { a: "The Green Fields of France", tier: "deadly", aliases: [] },
+    { a: "The Leaving of Liverpool", tier: "deadly", aliases: [] },
+    { a: "Arthur McBride", tier: "deadly", aliases: [] },
+    { a: "The Wild Colonial Boy", tier: "deadly", aliases: [] },
+    { a: "The Isle of Innisfree", tier: "deadly", aliases: [] },
+    { a: "Joxer Goes to Stuttgart", tier: "deadly", aliases: [] },
+    { a: "The Cliffs of Dooneen", tier: "deadly", aliases: [] },
+    { a: "Black Is the Colour", tier: "deadly", aliases: [] },
+    { a: "Kelly the Boy from Killane", tier: "deadly", aliases: [] },
+    { a: "Sliabh na mBan", tier: "deadly", aliases: [] },
+    { a: "Beidh Aonach Amárach", tier: "deadly", aliases: [] },
+    { a: "Dancing in the Moonlight", tier: "deadly", aliases: [] },
+    { a: "Sarah", tier: "deadly", aliases: [] },
+    { a: "Days Like This", tier: "deadly", aliases: [] },
+    { a: "Run", tier: "deadly", aliases: [] },
+    { a: "Gotta Tell You", tier: "deadly", aliases: [] },
+    { a: "Crazy World", tier: "deadly", aliases: [] },
+    { a: "Breakeven", tier: "deadly", aliases: [] },
+    { a: "High Hopes", tier: "deadly", aliases: [] },
+    { a: "This Town", tier: "deadly", aliases: [] },
+    { a: "Picture of You", tier: "deadly", aliases: [] },
+    { a: "Father and Son", tier: "deadly", aliases: [] },
+    { a: "Give It a Lash Jack", tier: "deadly", aliases: [] },
+    { a: "The Green and Red of Mayo", tier: "deadly", aliases: [] },
+    { a: "Lovely Leitrim", tier: "deadly", aliases: [] },
+    { a: "Whiskey on a Sunday", tier: "deadly", aliases: [] },
+    { a: "Raggle Taggle Gypsy", tier: "deadly", aliases: [] },
+    { a: "She Moved Through the Fair", tier: "deadly", aliases: [] },
+    { a: "Siúil a Rún", tier: "deadly", aliases: [] },
+    { a: "The Lark in the Clear Air", tier: "deadly", aliases: [] },
+    { a: "Fiesta", tier: "deadly", aliases: [] },
+    { a: "Make Me an Island", tier: "deadly", aliases: [] },
+    { a: "Nervous", tier: "deadly", aliases: [] },
+    { a: "The Zoological Gardens", tier: "craic", aliases: [] },
+    { a: "Molly Bawn", tier: "craic", aliases: [] },
+    { a: "The Contender", tier: "craic", aliases: [] },
+    { a: "Rainy Night in Soho", tier: "craic", aliases: [] },
+    { a: "Shining Light", tier: "craic", aliases: [] },
+    { a: "The Holy Ground", tier: "craic", aliases: [] },
+    { a: "Johnny Jump Up", tier: "craic", aliases: [] },
+  ] },
+  { id: "irishhouse", prompt: "Name something every Irish house has (the hot press, the good room, the Sacred Heart picture…)", ignore: ["a", "an", "the"], answers: [
+    { a: "Hot Press", tier: "sure", aliases: ["Hot water press", "Airing cupboard"] },
+    { a: "Good Room", tier: "sure", aliases: ["The good room", "Front room"] },
+    { a: "Sacred Heart Picture", tier: "sure", aliases: ["Sacred Heart", "Sacred Heart lamp", "Picture of the Sacred Heart"] },
+    { a: "Immersion", tier: "sure", aliases: ["The immersion"] },
+    { a: "Bag of Bags", tier: "notions", aliases: ["Bag for bags", "Bag full of bags", "Bag with all the bags"] },
+    { a: "Biscuit Tin Full of Sewing Stuff", tier: "notions", aliases: ["Biscuit tin sewing kit", "Roses tin with sewing stuff", "Quality Street tin with sewing"] },
+    { a: "Holy Water Font", tier: "sound", aliases: ["Holy water", "Holy water bottle", "Lourdes water"] },
+    { a: "Child of Prague", tier: "sound", aliases: ["Infant of Prague"] },
+    { a: "St Brigid's Cross", tier: "sound", aliases: ["Brigids cross"] },
+    { a: "Rosary Beads", tier: "sound", aliases: ["Rosary"] },
+    { a: "Crucifix", tier: "sound", aliases: [] },
+    { a: "Picture of the Pope", tier: "sound", aliases: ["Pope picture"] },
+    { a: "Communion Photos", tier: "sound", aliases: ["Communion photo", "Confirmation photos"] },
+    { a: "Wedding Photos", tier: "sound", aliases: [] },
+    { a: "Junk Drawer", tier: "sound", aliases: [] },
+    { a: "Press Under the Sink", tier: "sound", aliases: [] },
+    { a: "Kettle", tier: "sound", aliases: [] },
+    { a: "Teapot", tier: "sound", aliases: [] },
+    { a: "Toaster", tier: "sound", aliases: [] },
+    { a: "Hoover", tier: "sound", aliases: ["Vacuum cleaner"] },
+    { a: "Clothes Horse", tier: "sound", aliases: ["Airer"] },
+    { a: "Tumble Dryer", tier: "sound", aliases: [] },
+    { a: "Washing Machine", tier: "sound", aliases: [] },
+    { a: "Microwave", tier: "sound", aliases: [] },
+    { a: "Air Fryer", tier: "sound", aliases: [] },
+    { a: "Box Room", tier: "sound", aliases: [] },
+    { a: "Utility Room", tier: "sound", aliases: [] },
+    { a: "Fireplace", tier: "sound", aliases: ["Open fire"] },
+    { a: "Hot Water Bottle", tier: "sound", aliases: [] },
+    { a: "Tea Towels", tier: "sound", aliases: ["Tea towel"] },
+    { a: "Fridge Magnets", tier: "sound", aliases: [] },
+    { a: "Display Cabinet", tier: "sound", aliases: ["China cabinet"] },
+    { a: "Good China", tier: "sound", aliases: ["Good cups", "Wedding china"] },
+    { a: "Landline", tier: "sound", aliases: ["House phone"] },
+    { a: "Attic", tier: "sound", aliases: [] },
+    { a: "Clothes Line", tier: "sound", aliases: ["Washing line"] },
+    { a: "Ironing Board", tier: "sound", aliases: [] },
+    { a: "Biscuit Tin", tier: "sound", aliases: [] },
+    { a: "Sudocrem", tier: "sound", aliases: [] },
+    { a: "Wellies", tier: "sound", aliases: [] },
+    { a: "Shed", tier: "sound", aliases: [] },
+    { a: "Sitting Room", tier: "sound", aliases: [] },
+    { a: "Photo Albums", tier: "sound", aliases: [] },
+    { a: "Sweeping Brush", tier: "sound", aliases: [] },
+    { a: "Palms from Palm Sunday", tier: "savage", aliases: ["Palm", "Palms"] },
+    { a: "Memorial Cards", tier: "savage", aliases: ["Memoriam cards", "Mortuary cards"] },
+    { a: "Our Lady Statue", tier: "savage", aliases: ["Statue of Mary", "Virgin Mary statue"] },
+    { a: "House Blessing Plaque", tier: "savage", aliases: ["House blessing", "Irish blessing plaque"] },
+    { a: "Graduation Photos", tier: "savage", aliases: [] },
+    { a: "Chest Freezer", tier: "savage", aliases: [] },
+    { a: "Range", tier: "savage", aliases: ["Stanley range", "Aga"] },
+    { a: "Porch", tier: "savage", aliases: [] },
+    { a: "Downstairs Toilet", tier: "savage", aliases: [] },
+    { a: "Coal Bucket", tier: "savage", aliases: ["Coal scuttle"] },
+    { a: "Briquettes", tier: "savage", aliases: [] },
+    { a: "Electric Blanket", tier: "savage", aliases: [] },
+    { a: "Phone Table", tier: "savage", aliases: ["Telephone table", "Hall table"] },
+    { a: "Coat Stand", tier: "savage", aliases: ["Hall stand"] },
+    { a: "Waterford Crystal", tier: "savage", aliases: ["Crystal"] },
+    { a: "Phone Book", tier: "savage", aliases: ["Golden Pages"] },
+    { a: "Electric Shower", tier: "savage", aliases: [] },
+    { a: "Mop and Bucket", tier: "savage", aliases: [] },
+    { a: "Dustpan and Brush", tier: "savage", aliases: [] },
+    { a: "Clothes Pegs", tier: "savage", aliases: [] },
+    { a: "Sewing Machine", tier: "savage", aliases: [] },
+    { a: "Tin Opener", tier: "savage", aliases: [] },
+    { a: "Takeaway Menus", tier: "savage", aliases: [] },
+    { a: "7Up for When You're Sick", tier: "savage", aliases: ["7Up", "Flat 7Up"] },
+    { a: "Lucozade", tier: "savage", aliases: [] },
+    { a: "Calpol", tier: "savage", aliases: [] },
+    { a: "Vicks VapoRub", tier: "savage", aliases: ["Vicks"] },
+    { a: "Dettol", tier: "savage", aliases: [] },
+    { a: "Bread Bin", tier: "savage", aliases: [] },
+    { a: "Tea Cosy", tier: "savage", aliases: [] },
+    { a: "Toastie Maker", tier: "savage", aliases: ["Sandwich toaster", "Breville"] },
+    { a: "Dishwasher", tier: "savage", aliases: [] },
+    { a: "Umbrella", tier: "savage", aliases: [] },
+    { a: "Lawnmower", tier: "savage", aliases: [] },
+    { a: "Spare Room", tier: "savage", aliases: [] },
+    { a: "Kitchen Table", tier: "savage", aliases: [] },
+    { a: "Bible", tier: "savage", aliases: [] },
+    { a: "Sky Box", tier: "savage", aliases: [] },
+    { a: "Firelighters", tier: "savage", aliases: [] },
+    { a: "Christmas Tree in the Attic", tier: "savage", aliases: ["Christmas decorations"] },
+    { a: "Shoe Rack", tier: "savage", aliases: [] },
+    { a: "Barry's Tea", tier: "savage", aliases: ["Barrys", "Lyons Tea"] },
+    { a: "Picture of JFK", tier: "deadly", aliases: ["JFK picture", "John F Kennedy picture"] },
+    { a: "Padre Pio Picture", tier: "deadly", aliases: ["Padre Pio"] },
+    { a: "Divine Mercy Picture", tier: "deadly", aliases: [] },
+    { a: "Last Supper Picture", tier: "deadly", aliases: ["The Last Supper"] },
+    { a: "Belleek China", tier: "deadly", aliases: ["Belleek"] },
+    { a: "Grandfather Clock", tier: "deadly", aliases: [] },
+    { a: "Plastic Flowers", tier: "deadly", aliases: [] },
+    { a: "Turf Basket", tier: "deadly", aliases: [] },
+    { a: "Rayburn", tier: "deadly", aliases: [] },
+    { a: "Back Kitchen", tier: "deadly", aliases: [] },
+    { a: "Triton Shower", tier: "deadly", aliases: [] },
+    { a: "Chip Pan", tier: "deadly", aliases: [] },
+    { a: "Deep Fat Fryer", tier: "deadly", aliases: [] },
+    { a: "Deep Heat", tier: "deadly", aliases: [] },
+    { a: "Encyclopaedias", tier: "deadly", aliases: [] },
+    { a: "Dictionary", tier: "deadly", aliases: [] },
+    { a: "Mass Cards", tier: "deadly", aliases: [] },
+    { a: "Calendar from the Chinese", tier: "deadly", aliases: ["Calendar from the takeaway", "Chinese calendar"] },
+    { a: "Piano", tier: "deadly", aliases: [] },
+    { a: "Oil Tank", tier: "deadly", aliases: [] },
+    { a: "Stairs Cupboard", tier: "deadly", aliases: ["Cupboard under the stairs"] },
+    { a: "Doilies", tier: "craic", aliases: [] },
+    { a: "Hostess Trolley", tier: "craic", aliases: [] },
+    { a: "Map of Ireland Tea Towel", tier: "craic", aliases: [] },
+    { a: "Brass Ornaments", tier: "craic", aliases: [] },
+    { a: "Antimacassars", tier: "craic", aliases: [] },
+    { a: "Commemorative Plate", tier: "craic", aliases: [] },
+    { a: "Tin of USA Biscuits", tier: "craic", aliases: ["USA biscuits"] },
+  ] },
+  { id: "junkdrawer", prompt: "Name something you'd find in the press under the sink or the junk drawer", ignore: ["a", "an", "some", "old", "spare", "the"], answers: [
+    { a: "Batteries", tier: "sure", aliases: ["Dead batteries"] },
+    { a: "Sellotape", tier: "sure", aliases: ["Tape"] },
+    { a: "Takeaway Menus", tier: "sure", aliases: ["Menus"] },
+    { a: "Plastic Bags", tier: "sure", aliases: ["Bags"] },
+    { a: "Elastic Bands", tier: "notions", aliases: ["Rubber bands"] },
+    { a: "Keys That Open Nothing", tier: "notions", aliases: ["Random keys", "Keys", "Mystery keys"] },
+    { a: "Scissors", tier: "sound", aliases: [] },
+    { a: "Pens", tier: "sound", aliases: [] },
+    { a: "Lighter", tier: "sound", aliases: [] },
+    { a: "Matches", tier: "sound", aliases: [] },
+    { a: "Candles", tier: "sound", aliases: [] },
+    { a: "Birthday Candles", tier: "sound", aliases: [] },
+    { a: "Screwdriver", tier: "sound", aliases: [] },
+    { a: "Allen Keys", tier: "sound", aliases: ["Allen key"] },
+    { a: "Instruction Manuals", tier: "sound", aliases: ["Manuals", "Instructions"] },
+    { a: "Old Phone", tier: "sound", aliases: ["Old mobile"] },
+    { a: "Chargers", tier: "sound", aliases: ["Phone charger", "Cables"] },
+    { a: "Torch", tier: "sound", aliases: [] },
+    { a: "Light Bulbs", tier: "sound", aliases: ["Bulbs"] },
+    { a: "Superglue", tier: "sound", aliases: [] },
+    { a: "Blu Tack", tier: "sound", aliases: [] },
+    { a: "String", tier: "sound", aliases: ["Twine"] },
+    { a: "Paper Clips", tier: "sound", aliases: [] },
+    { a: "Coins", tier: "sound", aliases: ["Change", "Loose change"] },
+    { a: "Receipts", tier: "sound", aliases: [] },
+    { a: "Washing Up Liquid", tier: "sound", aliases: ["Fairy liquid", "Fairy"] },
+    { a: "Bleach", tier: "sound", aliases: [] },
+    { a: "Rubber Gloves", tier: "sound", aliases: ["Marigolds"] },
+    { a: "Sponges", tier: "sound", aliases: [] },
+    { a: "Bin Bags", tier: "sound", aliases: [] },
+    { a: "Dishwasher Tablets", tier: "sound", aliases: [] },
+    { a: "J-Cloths", tier: "sound", aliases: ["Cloths"] },
+    { a: "Brillo Pads", tier: "sound", aliases: ["Steel wool"] },
+    { a: "Plunger", tier: "sound", aliases: [] },
+    { a: "Fly Spray", tier: "sound", aliases: [] },
+    { a: "Hammer", tier: "sound", aliases: [] },
+    { a: "Measuring Tape", tier: "sound", aliases: ["Tape measure"] },
+    { a: "Gaffer Tape", tier: "sound", aliases: ["Duct tape"] },
+    { a: "Tinfoil", tier: "sound", aliases: [] },
+    { a: "Clingfilm", tier: "sound", aliases: [] },
+    { a: "Plasters", tier: "sound", aliases: [] },
+    { a: "Stamps", tier: "sound", aliases: [] },
+    { a: "Envelopes", tier: "sound", aliases: [] },
+    { a: "Pencil", tier: "savage", aliases: [] },
+    { a: "Notepad", tier: "savage", aliases: [] },
+    { a: "Post-its", tier: "savage", aliases: ["Post-it notes"] },
+    { a: "Mr Muscle", tier: "savage", aliases: [] },
+    { a: "Cif", tier: "savage", aliases: [] },
+    { a: "Domestos", tier: "savage", aliases: [] },
+    { a: "Furniture Polish", tier: "savage", aliases: ["Pledge", "Mr Sheen"] },
+    { a: "Shoe Polish", tier: "savage", aliases: ["Kiwi"] },
+    { a: "Drain Cleaner", tier: "savage", aliases: [] },
+    { a: "Washers", tier: "savage", aliases: [] },
+    { a: "Mouse Traps", tier: "savage", aliases: ["Mouse trap"] },
+    { a: "Bucket", tier: "savage", aliases: [] },
+    { a: "Old Toothbrush", tier: "savage", aliases: [] },
+    { a: "Window Cleaner", tier: "savage", aliases: ["Windolene"] },
+    { a: "Dusters", tier: "savage", aliases: [] },
+    { a: "Bread Soda", tier: "savage", aliases: ["Baking soda"] },
+    { a: "Vinegar", tier: "savage", aliases: [] },
+    { a: "WD-40", tier: "savage", aliases: [] },
+    { a: "Nails", tier: "savage", aliases: [] },
+    { a: "Screws", tier: "savage", aliases: [] },
+    { a: "Spirit Level", tier: "savage", aliases: [] },
+    { a: "Pliers", tier: "savage", aliases: [] },
+    { a: "Spanner", tier: "savage", aliases: [] },
+    { a: "Fuses", tier: "savage", aliases: [] },
+    { a: "Plugs", tier: "savage", aliases: [] },
+    { a: "Extension Lead", tier: "savage", aliases: [] },
+    { a: "Tea Lights", tier: "savage", aliases: [] },
+    { a: "Hair Bobbins", tier: "savage", aliases: ["Hair ties", "Bobbins"] },
+    { a: "Hair Clips", tier: "savage", aliases: ["Bobby pins", "Kirby grips"] },
+    { a: "Safety Pins", tier: "savage", aliases: [] },
+    { a: "Needle and Thread", tier: "savage", aliases: [] },
+    { a: "Buttons", tier: "savage", aliases: [] },
+    { a: "Bottle Opener", tier: "savage", aliases: [] },
+    { a: "Clothes Pegs", tier: "savage", aliases: [] },
+    { a: "Chopsticks", tier: "savage", aliases: [] },
+    { a: "Soy Sauce Sachets", tier: "savage", aliases: [] },
+    { a: "Ketchup Sachets", tier: "savage", aliases: [] },
+    { a: "Sugar Sachets", tier: "savage", aliases: ["Sugar packets"] },
+    { a: "Twist Ties", tier: "savage", aliases: [] },
+    { a: "Bag Clips", tier: "savage", aliases: [] },
+    { a: "Freezer Bags", tier: "savage", aliases: [] },
+    { a: "Cocktail Sticks", tier: "savage", aliases: [] },
+    { a: "Glasses", tier: "savage", aliases: ["Reading glasses"] },
+    { a: "Sunglasses", tier: "savage", aliases: [] },
+    { a: "Earphones", tier: "savage", aliases: ["Headphones"] },
+    { a: "Loyalty Cards", tier: "savage", aliases: ["Clubcard", "Real Rewards card"] },
+    { a: "Gift Vouchers", tier: "savage", aliases: ["One4All", "Vouchers"] },
+    { a: "Foreign Coins", tier: "savage", aliases: ["Sterling"] },
+    { a: "Passport Photos", tier: "savage", aliases: [] },
+    { a: "Keyrings", tier: "savage", aliases: [] },
+    { a: "Playing Cards", tier: "savage", aliases: ["Deck of cards"] },
+    { a: "Glue Stick", tier: "savage", aliases: ["Pritt Stick"] },
+    { a: "Stapler", tier: "savage", aliases: [] },
+    { a: "Ruler", tier: "savage", aliases: [] },
+    { a: "Calculator", tier: "savage", aliases: [] },
+    { a: "Rubber", tier: "savage", aliases: ["Eraser"] },
+    { a: "Highlighter", tier: "savage", aliases: [] },
+    { a: "Markers", tier: "savage", aliases: ["Sharpie"] },
+    { a: "Cable Ties", tier: "savage", aliases: ["Zip ties"] },
+    { a: "Insulating Tape", tier: "savage", aliases: ["Electrical tape"] },
+    { a: "Paint Brushes", tier: "savage", aliases: [] },
+    { a: "Lip Balm", tier: "savage", aliases: ["Vaseline"] },
+    { a: "Chewing Gum", tier: "savage", aliases: [] },
+    { a: "Old Remote", tier: "savage", aliases: ["Remote control"] },
+    { a: "Leap Card", tier: "savage", aliases: [] },
+    { a: "Ant Powder", tier: "savage", aliases: [] },
+    { a: "Radiator Key", tier: "deadly", aliases: ["Radiator bleed key"] },
+    { a: "Calpol Syringe", tier: "deadly", aliases: ["Medicine syringe"] },
+    { a: "Old Punts", tier: "deadly", aliases: ["Punts", "Irish pound coins"] },
+    { a: "SIM Cards", tier: "deadly", aliases: ["Old SIM card"] },
+    { a: "Memory Cards", tier: "deadly", aliases: [] },
+    { a: "USB Sticks", tier: "deadly", aliases: ["USB"] },
+    { a: "Old Passports", tier: "deadly", aliases: [] },
+    { a: "Warranty Cards", tier: "deadly", aliases: ["Warranty"] },
+    { a: "Staples", tier: "deadly", aliases: [] },
+    { a: "Hole Punch", tier: "deadly", aliases: [] },
+    { a: "Pencil Sharpener", tier: "deadly", aliases: ["Sharpener"] },
+    { a: "Tipp-Ex", tier: "deadly", aliases: [] },
+    { a: "Crayons", tier: "deadly", aliases: [] },
+    { a: "Dice", tier: "deadly", aliases: [] },
+    { a: "Marbles", tier: "deadly", aliases: [] },
+    { a: "Sandpaper", tier: "deadly", aliases: [] },
+    { a: "Fridge Magnets", tier: "deadly", aliases: [] },
+    { a: "Tic Tacs", tier: "deadly", aliases: [] },
+    { a: "Shoelaces", tier: "deadly", aliases: [] },
+    { a: "Corks", tier: "deadly", aliases: [] },
+    { a: "Spare Buttons in Little Bags", tier: "deadly", aliases: ["Spare buttons"] },
+    { a: "Bike Pump", tier: "deadly", aliases: [] },
+    { a: "Puncture Repair Kit", tier: "deadly", aliases: [] },
+    { a: "Meter Box Key", tier: "craic", aliases: [] },
+    { a: "Parish Envelopes", tier: "craic", aliases: ["Church envelopes"] },
+    { a: "Raffle Tickets", tier: "craic", aliases: [] },
+    { a: "Holy Water Bottle", tier: "craic", aliases: [] },
+    { a: "Medals", tier: "craic", aliases: [] },
+    { a: "Old Christmas Cards", tier: "craic", aliases: ["Christmas cards"] },
+    { a: "Polo Mints", tier: "craic", aliases: [] },
+  ] },
+  { id: "icecream", prompt: "Name an ice cream or ice pop you'd get in an Irish shop", ignore: ["ice", "cream", "lolly", "hb", "pop"], answers: [
+    { a: "99", tier: "sure", aliases: ["Ninety Nine", "99 with a Flake", "99 cone"] },
+    { a: "Magnum", tier: "sure", aliases: [] },
+    { a: "Cornetto", tier: "sure", aliases: [] },
+    { a: "Calippo", tier: "sure", aliases: [] },
+    { a: "Loop the Loop", tier: "notions", aliases: [] },
+    { a: "Brunch", tier: "notions", aliases: [] },
+    { a: "Choc Ice", tier: "sound", aliases: [] },
+    { a: "Funny Feet", tier: "sound", aliases: [] },
+    { a: "Twister", tier: "sound", aliases: [] },
+    { a: "Solero", tier: "sound", aliases: [] },
+    { a: "Feast", tier: "sound", aliases: [] },
+    { a: "Viennetta", tier: "sound", aliases: [] },
+    { a: "Super Split", tier: "sound", aliases: [] },
+    { a: "Mini Milk", tier: "sound", aliases: [] },
+    { a: "Fab", tier: "sound", aliases: [] },
+    { a: "Rocket", tier: "sound", aliases: [] },
+    { a: "Nobbly Bobbly", tier: "sound", aliases: [] },
+    { a: "Mr Freeze", tier: "sound", aliases: ["Freeze pops", "Freeze pop"] },
+    { a: "Ben & Jerry's", tier: "sound", aliases: ["Ben and Jerrys"] },
+    { a: "Häagen-Dazs", tier: "sound", aliases: ["Haagen Dazs"] },
+    { a: "Ice Cream Wafer", tier: "sound", aliases: ["Wafer", "Ice cream sandwich"] },
+    { a: "HB Vanilla Block", tier: "sound", aliases: ["Block", "Vanilla block"] },
+    { a: "Mint Choc Chip", tier: "sound", aliases: [] },
+    { a: "Vanilla", tier: "sound", aliases: [] },
+    { a: "Chocolate", tier: "sound", aliases: [] },
+    { a: "Strawberry", tier: "sound", aliases: [] },
+    { a: "Mars Ice Cream", tier: "sound", aliases: [] },
+    { a: "Snickers Ice Cream", tier: "sound", aliases: [] },
+    { a: "Twix Ice Cream", tier: "sound", aliases: [] },
+    { a: "Slush Puppie", tier: "sound", aliases: ["Slushie", "Slush"] },
+    { a: "Carte D'Or", tier: "sound", aliases: [] },
+    { a: "Bounty Ice Cream", tier: "savage", aliases: [] },
+    { a: "Galaxy Ice Cream", tier: "savage", aliases: [] },
+    { a: "Maltesers Ice Cream", tier: "savage", aliases: [] },
+    { a: "Magnum White", tier: "savage", aliases: [] },
+    { a: "Magnum Almond", tier: "savage", aliases: [] },
+    { a: "Magnum Double", tier: "savage", aliases: [] },
+    { a: "Strawberry Cornetto", tier: "savage", aliases: [] },
+    { a: "Mint Cornetto", tier: "savage", aliases: [] },
+    { a: "Fruit Pastille Lolly", tier: "savage", aliases: ["Fruit Pastilles"] },
+    { a: "Neapolitan", tier: "savage", aliases: [] },
+    { a: "Raspberry Ripple", tier: "savage", aliases: [] },
+    { a: "Cookie Dough", tier: "savage", aliases: [] },
+    { a: "Salted Caramel", tier: "savage", aliases: [] },
+    { a: "Cookies and Cream", tier: "savage", aliases: [] },
+    { a: "Rocky Road", tier: "savage", aliases: [] },
+    { a: "Honeycomb", tier: "savage", aliases: [] },
+    { a: "Sundae", tier: "savage", aliases: [] },
+    { a: "Banana Split", tier: "savage", aliases: [] },
+    { a: "Mr Whippy", tier: "savage", aliases: ["Whippy"] },
+    { a: "Frozen Yoghurt", tier: "savage", aliases: ["Froyo"] },
+    { a: "Sorbet", tier: "savage", aliases: [] },
+    { a: "Gelato", tier: "savage", aliases: [] },
+    { a: "Murphy's", tier: "savage", aliases: ["Murphys Ice Cream"] },
+    { a: "Gino's Gelato", tier: "savage", aliases: ["Ginos"] },
+    { a: "Calippo Shots", tier: "savage", aliases: [] },
+    { a: "Solero Exotic", tier: "savage", aliases: [] },
+    { a: "Pistachio", tier: "deadly", aliases: [] },
+    { a: "Bubblegum", tier: "deadly", aliases: [] },
+    { a: "Tutti Frutti", tier: "deadly", aliases: [] },
+    { a: "Butterscotch", tier: "deadly", aliases: [] },
+    { a: "Knickerbocker Glory", tier: "deadly", aliases: [] },
+    { a: "Arctic Roll", tier: "deadly", aliases: [] },
+    { a: "Mochi", tier: "deadly", aliases: [] },
+    { a: "Silver Pail", tier: "deadly", aliases: [] },
+    { a: "Lemon Sorbet", tier: "deadly", aliases: [] },
+    { a: "Mango Sorbet", tier: "deadly", aliases: [] },
+    { a: "Sprinkles", tier: "deadly", aliases: ["Hundreds and thousands"] },
+    { a: "Ice Cream Cake", tier: "deadly", aliases: [] },
+    { a: "Brown Bread Ice Cream", tier: "craic", aliases: ["Brown bread"] },
+    { a: "Morelli's", tier: "craic", aliases: [] },
+    { a: "Teddy's", tier: "craic", aliases: [] },
+    { a: "Linnalla", tier: "craic", aliases: [] },
+  ] },
+  { id: "cereal", prompt: "Name a cereal you'd find in an Irish kitchen", ignore: ["kelloggs", "nestle", "cereal"], answers: [
+    { a: "Cornflakes", tier: "sure", aliases: ["Corn Flakes"] },
+    { a: "Weetabix", tier: "sure", aliases: [] },
+    { a: "Rice Krispies", tier: "sure", aliases: [] },
+    { a: "Coco Pops", tier: "sure", aliases: [] },
+    { a: "Ready Brek", tier: "notions", aliases: [] },
+    { a: "Golden Nuggets", tier: "notions", aliases: [] },
+    { a: "Shreddies", tier: "sound", aliases: [] },
+    { a: "Cheerios", tier: "sound", aliases: [] },
+    { a: "Crunchy Nut", tier: "sound", aliases: ["Crunchy Nut Cornflakes"] },
+    { a: "Special K", tier: "sound", aliases: [] },
+    { a: "Bran Flakes", tier: "sound", aliases: [] },
+    { a: "Frosties", tier: "sound", aliases: [] },
+    { a: "Lucky Charms", tier: "sound", aliases: [] },
+    { a: "Weetos", tier: "sound", aliases: [] },
+    { a: "Alpen", tier: "sound", aliases: [] },
+    { a: "Fruit 'n Fibre", tier: "sound", aliases: ["Fruit and Fibre"] },
+    { a: "Krave", tier: "sound", aliases: [] },
+    { a: "Shredded Wheat", tier: "sound", aliases: [] },
+    { a: "Cinnamon Grahams", tier: "sound", aliases: ["Curiously Cinnamon", "Cinnamon Toast Crunch"] },
+    { a: "Porridge", tier: "sound", aliases: ["Oats", "Porridge oats", "Flahavan's", "Quaker Oats"] },
+    { a: "Coco Shreddies", tier: "sound", aliases: [] },
+    { a: "Frosted Shreddies", tier: "sound", aliases: [] },
+    { a: "Granola", tier: "sound", aliases: [] },
+    { a: "Muesli", tier: "sound", aliases: [] },
+    { a: "Honey Cheerios", tier: "savage", aliases: [] },
+    { a: "Golden Grahams", tier: "savage", aliases: [] },
+    { a: "Nesquik", tier: "savage", aliases: [] },
+    { a: "Sugar Puffs", tier: "savage", aliases: ["Honey Monster Puffs"] },
+    { a: "All-Bran", tier: "savage", aliases: [] },
+    { a: "Sultana Bran", tier: "savage", aliases: [] },
+    { a: "Oatibix", tier: "savage", aliases: [] },
+    { a: "Weetabix Minis", tier: "savage", aliases: [] },
+    { a: "Chocolate Weetabix", tier: "savage", aliases: [] },
+    { a: "Cookie Crisp", tier: "savage", aliases: [] },
+    { a: "Clusters", tier: "savage", aliases: [] },
+    { a: "Multigrain Cheerios", tier: "savage", aliases: [] },
+    { a: "Ricicles", tier: "savage", aliases: [] },
+    { a: "Frosted Wheats", tier: "savage", aliases: ["Mini Wheats"] },
+    { a: "Variety Pack", tier: "savage", aliases: [] },
+    { a: "Flahavan's Progress", tier: "savage", aliases: ["Progress"] },
+    { a: "Oat So Simple", tier: "savage", aliases: [] },
+    { a: "Special K Red Berries", tier: "savage", aliases: [] },
+    { a: "Fitness", tier: "savage", aliases: [] },
+    { a: "Raisin Wheats", tier: "savage", aliases: [] },
+    { a: "Lion Cereal", tier: "savage", aliases: ["Lion"] },
+    { a: "Puffed Wheat", tier: "deadly", aliases: [] },
+    { a: "Country Store", tier: "deadly", aliases: [] },
+    { a: "Optivita", tier: "deadly", aliases: [] },
+    { a: "Start", tier: "deadly", aliases: [] },
+    { a: "Just Right", tier: "deadly", aliases: [] },
+    { a: "Smacks", tier: "deadly", aliases: ["Honey Smacks"] },
+    { a: "Honey Loops", tier: "deadly", aliases: [] },
+    { a: "Shreddies Max", tier: "deadly", aliases: [] },
+    { a: "Jordans Country Crisp", tier: "deadly", aliases: [] },
+    { a: "Dorset Cereals", tier: "deadly", aliases: [] },
+    { a: "Rice Snaps", tier: "deadly", aliases: [] },
+    { a: "Coco Pops Rocks", tier: "craic", aliases: [] },
+    { a: "Chocapic", tier: "craic", aliases: [] },
+    { a: "Weetabix Crispy Minis", tier: "craic", aliases: [] },
+    { a: "Bran Buds", tier: "craic", aliases: [] },
+  ] },
+  { id: "dublinbus", prompt: "Name a Dublin Bus route (just the number is grand)", ignore: ["route", "bus", "number", "no", "the"], answers: [
+    { a: "46A", tier: "sure", aliases: [] },
+    { a: "39A", tier: "sure", aliases: [] },
+    { a: "145", tier: "sure", aliases: [] },
+    { a: "16", tier: "sure", aliases: [] },
+    { a: "747", tier: "notions", aliases: ["Airlink"] },
+    { a: "C1", tier: "notions", aliases: [] },
+    { a: "15", tier: "sound", aliases: [] },
+    { a: "7", tier: "sound", aliases: [] },
+    { a: "4", tier: "sound", aliases: [] },
+    { a: "13", tier: "sound", aliases: [] },
+    { a: "40", tier: "sound", aliases: [] },
+    { a: "77A", tier: "sound", aliases: [] },
+    { a: "27", tier: "sound", aliases: [] },
+    { a: "123", tier: "sound", aliases: [] },
+    { a: "41", tier: "sound", aliases: [] },
+    { a: "25A", tier: "sound", aliases: [] },
+    { a: "66", tier: "sound", aliases: [] },
+    { a: "67", tier: "sound", aliases: [] },
+    { a: "83", tier: "sound", aliases: [] },
+    { a: "9", tier: "sound", aliases: [] },
+    { a: "140", tier: "sound", aliases: [] },
+    { a: "122", tier: "sound", aliases: [] },
+    { a: "151", tier: "sound", aliases: [] },
+    { a: "14", tier: "sound", aliases: [] },
+    { a: "11", tier: "sound", aliases: [] },
+    { a: "38", tier: "sound", aliases: [] },
+    { a: "37", tier: "sound", aliases: [] },
+    { a: "1", tier: "sound", aliases: [] },
+    { a: "39", tier: "sound", aliases: [] },
+    { a: "25B", tier: "sound", aliases: [] },
+    { a: "C2", tier: "sound", aliases: [] },
+    { a: "C3", tier: "sound", aliases: [] },
+    { a: "C4", tier: "sound", aliases: [] },
+    { a: "C5", tier: "sound", aliases: [] },
+    { a: "C6", tier: "sound", aliases: [] },
+    { a: "17A", tier: "savage", aliases: [] },
+    { a: "27B", tier: "savage", aliases: [] },
+    { a: "29A", tier: "savage", aliases: [] },
+    { a: "31", tier: "savage", aliases: [] },
+    { a: "32", tier: "savage", aliases: [] },
+    { a: "33", tier: "savage", aliases: [] },
+    { a: "42", tier: "savage", aliases: [] },
+    { a: "43", tier: "savage", aliases: [] },
+    { a: "44", tier: "savage", aliases: [] },
+    { a: "45A", tier: "savage", aliases: [] },
+    { a: "49", tier: "savage", aliases: [] },
+    { a: "54A", tier: "savage", aliases: [] },
+    { a: "56A", tier: "savage", aliases: [] },
+    { a: "65", tier: "savage", aliases: [] },
+    { a: "65B", tier: "savage", aliases: [] },
+    { a: "68", tier: "savage", aliases: [] },
+    { a: "69", tier: "savage", aliases: [] },
+    { a: "70", tier: "savage", aliases: [] },
+    { a: "75", tier: "savage", aliases: [] },
+    { a: "76", tier: "savage", aliases: [] },
+    { a: "79", tier: "savage", aliases: [] },
+    { a: "84", tier: "savage", aliases: [] },
+    { a: "102", tier: "savage", aliases: [] },
+    { a: "104", tier: "savage", aliases: [] },
+    { a: "130", tier: "savage", aliases: [] },
+    { a: "150", tier: "savage", aliases: [] },
+    { a: "120", tier: "savage", aliases: [] },
+    { a: "18", tier: "savage", aliases: [] },
+    { a: "26", tier: "savage", aliases: [] },
+    { a: "27A", tier: "savage", aliases: [] },
+    { a: "47", tier: "savage", aliases: [] },
+    { a: "61", tier: "savage", aliases: [] },
+    { a: "63", tier: "savage", aliases: [] },
+    { a: "66A", tier: "savage", aliases: [] },
+    { a: "67A", tier: "savage", aliases: [] },
+    { a: "79A", tier: "savage", aliases: [] },
+    { a: "25", tier: "savage", aliases: [] },
+    { a: "H1", tier: "savage", aliases: [] },
+    { a: "H2", tier: "savage", aliases: [] },
+    { a: "H3", tier: "savage", aliases: [] },
+    { a: "G1", tier: "savage", aliases: [] },
+    { a: "G2", tier: "savage", aliases: [] },
+    { a: "E1", tier: "savage", aliases: [] },
+    { a: "E2", tier: "savage", aliases: [] },
+    { a: "N4", tier: "deadly", aliases: [] },
+    { a: "N6", tier: "deadly", aliases: [] },
+    { a: "S2", tier: "deadly", aliases: [] },
+    { a: "F1", tier: "deadly", aliases: [] },
+    { a: "F2", tier: "deadly", aliases: [] },
+    { a: "F3", tier: "deadly", aliases: [] },
+    { a: "15A", tier: "deadly", aliases: [] },
+    { a: "15B", tier: "deadly", aliases: [] },
+    { a: "40B", tier: "deadly", aliases: [] },
+    { a: "40D", tier: "deadly", aliases: [] },
+    { a: "38A", tier: "deadly", aliases: [] },
+    { a: "41C", tier: "deadly", aliases: [] },
+    { a: "51D", tier: "deadly", aliases: [] },
+    { a: "59", tier: "deadly", aliases: [] },
+    { a: "84X", tier: "deadly", aliases: [] },
+    { a: "77X", tier: "deadly", aliases: [] },
+    { a: "33X", tier: "deadly", aliases: [] },
+    { a: "67X", tier: "deadly", aliases: [] },
+    { a: "142", tier: "deadly", aliases: [] },
+    { a: "757", tier: "deadly", aliases: [] },
+    { a: "111", tier: "craic", aliases: [] },
+    { a: "114", tier: "craic", aliases: [] },
+    { a: "118", tier: "craic", aliases: [] },
+    { a: "220", tier: "craic", aliases: [] },
+    { a: "238", tier: "craic", aliases: [] },
+    { a: "239", tier: "craic", aliases: [] },
+    { a: "270", tier: "craic", aliases: [] },
+  ] },
+  { id: "filmedhere", prompt: "Name a Hollywood or international film or TV show filmed in Ireland (Star Wars counts)", ignore: ["film", "movie", "series", "show"], answers: [
+    { a: "Star Wars", tier: "sure", aliases: ["Star Wars: The Force Awakens", "The Force Awakens", "Star Wars: The Last Jedi", "The Last Jedi", "Force Awakens"] },
+    { a: "Braveheart", tier: "sure", aliases: [] },
+    { a: "Game of Thrones", tier: "sure", aliases: [] },
+    { a: "P.S. I Love You", tier: "sure", aliases: ["PS I Love You"] },
+    { a: "Leap Year", tier: "notions", aliases: [] },
+    { a: "Saving Private Ryan", tier: "notions", aliases: [] },
+    { a: "The Banshees of Inisherin", tier: "sound", aliases: ["Banshees of Inisherin", "Banshees"] },
+    { a: "Harry Potter and the Half-Blood Prince", tier: "sound", aliases: ["Harry Potter", "Half-Blood Prince"] },
+    { a: "The Princess Bride", tier: "sound", aliases: [] },
+    { a: "Vikings", tier: "sound", aliases: [] },
+    { a: "Derry Girls", tier: "sound", aliases: [] },
+    { a: "Father Ted", tier: "sound", aliases: [] },
+    { a: "Bad Sisters", tier: "sound", aliases: [] },
+    { a: "The Quiet Man", tier: "sound", aliases: [] },
+    { a: "Ryan's Daughter", tier: "sound", aliases: [] },
+    { a: "Far and Away", tier: "sound", aliases: [] },
+    { a: "Disenchanted", tier: "sound", aliases: [] },
+    { a: "Reign of Fire", tier: "sound", aliases: [] },
+    { a: "King Arthur", tier: "sound", aliases: [] },
+    { a: "The Tudors", tier: "sound", aliases: [] },
+    { a: "Penny Dreadful", tier: "sound", aliases: [] },
+    { a: "Line of Duty", tier: "sound", aliases: [] },
+    { a: "The Fall", tier: "sound", aliases: [] },
+    { a: "Dracula Untold", tier: "sound", aliases: [] },
+    { a: "The Northman", tier: "sound", aliases: [] },
+    { a: "Dungeons & Dragons: Honor Among Thieves", tier: "sound", aliases: ["Dungeons and Dragons", "Dungeons & Dragons"] },
+    { a: "Brooklyn", tier: "sound", aliases: [] },
+    { a: "Michael Collins", tier: "sound", aliases: [] },
+    { a: "Angela's Ashes", tier: "sound", aliases: [] },
+    { a: "Vikings: Valhalla", tier: "sound", aliases: ["Valhalla"] },
+    { a: "Ella Enchanted", tier: "savage", aliases: [] },
+    { a: "The Green Knight", tier: "savage", aliases: [] },
+    { a: "Wild Mountain Thyme", tier: "savage", aliases: [] },
+    { a: "Veronica Guerin", tier: "savage", aliases: [] },
+    { a: "Ballykissangel", tier: "savage", aliases: [] },
+    { a: "The Last Duel", tier: "savage", aliases: [] },
+    { a: "Fate: The Winx Saga", tier: "savage", aliases: ["Winx Saga", "Fate"] },
+    { a: "Educating Rita", tier: "savage", aliases: [] },
+    { a: "Moby Dick", tier: "savage", aliases: [] },
+    { a: "Barry Lyndon", tier: "savage", aliases: [] },
+    { a: "Excalibur", tier: "savage", aliases: [] },
+    { a: "Tristan & Isolde", tier: "savage", aliases: ["Tristan and Isolde"] },
+    { a: "The Count of Monte Cristo", tier: "savage", aliases: [] },
+    { a: "Becoming Jane", tier: "savage", aliases: [] },
+    { a: "Love, Rosie", tier: "savage", aliases: ["Love Rosie"] },
+    { a: "Ripper Street", tier: "savage", aliases: [] },
+    { a: "Dublin Murders", tier: "savage", aliases: [] },
+    { a: "The Commitments", tier: "savage", aliases: [] },
+    { a: "In the Name of the Father", tier: "savage", aliases: [] },
+    { a: "Circle of Friends", tier: "savage", aliases: [] },
+    { a: "The Wonder", tier: "savage", aliases: [] },
+    { a: "The Wind That Shakes the Barley", tier: "savage", aliases: [] },
+    { a: "Blue Lights", tier: "savage", aliases: [] },
+    { a: "Moone Boy", tier: "savage", aliases: [] },
+    { a: "Agnes Browne", tier: "deadly", aliases: [] },
+    { a: "The Butcher Boy", tier: "deadly", aliases: [] },
+    { a: "Evelyn", tier: "deadly", aliases: [] },
+    { a: "Krypton", tier: "deadly", aliases: [] },
+    { a: "The Lost City of Z", tier: "deadly", aliases: [] },
+    { a: "The Matchmaker", tier: "deadly", aliases: [] },
+    { a: "The Frankenstein Chronicles", tier: "deadly", aliases: [] },
+    { a: "Camelot", tier: "deadly", aliases: [] },
+    { a: "Haywire", tier: "deadly", aliases: [] },
+    { a: "Albert Nobbs", tier: "deadly", aliases: [] },
+    { a: "Your Highness", tier: "deadly", aliases: [] },
+    { a: "City of Ember", tier: "deadly", aliases: [] },
+    { a: "The Lobster", tier: "deadly", aliases: [] },
+    { a: "Shake Hands with the Devil", tier: "craic", aliases: [] },
+    { a: "Zardoz", tier: "craic", aliases: [] },
+    { a: "The Blue Max", tier: "craic", aliases: [] },
+  ] },
+  { id: "globalco", prompt: "Name an Irish company that went global (Ryanair, Stripe, Kerry Group…)", ignore: ["plc", "group", "ltd", "limited", "ireland", "irish"], answers: [
+    { a: "Ryanair", tier: "sure", aliases: [] },
+    { a: "Stripe", tier: "sure", aliases: [] },
+    { a: "Kerry Group", tier: "sure", aliases: ["Kerry"] },
+    { a: "Penneys", tier: "sure", aliases: ["Primark"] },
+    { a: "Kerrygold", tier: "notions", aliases: ["Ornua"] },
+    { a: "Intercom", tier: "notions", aliases: [] },
+    { a: "CRH", tier: "sound", aliases: [] },
+    { a: "Smurfit Kappa", tier: "sound", aliases: ["Smurfit Westrock", "Smurfit"] },
+    { a: "Glanbia", tier: "sound", aliases: ["Optimum Nutrition"] },
+    { a: "Kingspan", tier: "sound", aliases: [] },
+    { a: "Aer Lingus", tier: "sound", aliases: [] },
+    { a: "AerCap", tier: "sound", aliases: [] },
+    { a: "ICON", tier: "sound", aliases: ["ICON plc"] },
+    { a: "Butlers Chocolates", tier: "sound", aliases: ["Butlers"] },
+    { a: "Lily O'Brien's", tier: "sound", aliases: [] },
+    { a: "Waterford Crystal", tier: "sound", aliases: [] },
+    { a: "Applegreen", tier: "sound", aliases: [] },
+    { a: "Web Summit", tier: "sound", aliases: [] },
+    { a: "Fyffes", tier: "sound", aliases: [] },
+    { a: "Glen Dimplex", tier: "sound", aliases: ["Dimplex"] },
+    { a: "Workhuman", tier: "sound", aliases: ["Globoforce"] },
+    { a: "Harland & Wolff", tier: "sound", aliases: ["Harland and Wolff"] },
+    { a: "Greencore", tier: "savage", aliases: [] },
+    { a: "Musgrave", tier: "savage", aliases: [] },
+    { a: "Aryzta", tier: "savage", aliases: ["Cuisine de France", "IAWS"] },
+    { a: "DCC", tier: "savage", aliases: [] },
+    { a: "Grafton Group", tier: "savage", aliases: [] },
+    { a: "Fenergo", tier: "savage", aliases: [] },
+    { a: "Wayflyer", tier: "savage", aliases: [] },
+    { a: "LetsGetChecked", tier: "savage", aliases: [] },
+    { a: "Manna", tier: "savage", aliases: [] },
+    { a: "Flipdish", tier: "savage", aliases: [] },
+    { a: "CarTrawler", tier: "savage", aliases: [] },
+    { a: "Hostelworld", tier: "savage", aliases: [] },
+    { a: "Combilift", tier: "savage", aliases: [] },
+    { a: "McHale", tier: "savage", aliases: [] },
+    { a: "Elan", tier: "savage", aliases: ["Élan"] },
+    { a: "Ardagh Group", tier: "savage", aliases: ["Ardagh"] },
+    { a: "Fexco", tier: "savage", aliases: [] },
+    { a: "Randox", tier: "savage", aliases: [] },
+    { a: "CityJet", tier: "savage", aliases: [] },
+    { a: "Iona Technologies", tier: "savage", aliases: ["IONA"] },
+    { a: "Storyful", tier: "savage", aliases: [] },
+    { a: "Teamwork", tier: "savage", aliases: [] },
+    { a: "Tines", tier: "savage", aliases: [] },
+    { a: "Datalex", tier: "savage", aliases: [] },
+    { a: "Dawn Meats", tier: "savage", aliases: [] },
+    { a: "ABP Food Group", tier: "savage", aliases: ["ABP"] },
+    { a: "Kepak", tier: "savage", aliases: [] },
+    { a: "Avolon", tier: "savage", aliases: [] },
+    { a: "Total Produce", tier: "savage", aliases: ["Dole"] },
+    { a: "Glofox", tier: "savage", aliases: [] },
+    { a: "Version 1", tier: "savage", aliases: [] },
+    { a: "Havok", tier: "savage", aliases: [] },
+    { a: "Fineos", tier: "deadly", aliases: [] },
+    { a: "Openet", tier: "deadly", aliases: [] },
+    { a: "Baltimore Technologies", tier: "deadly", aliases: [] },
+    { a: "Realex Payments", tier: "deadly", aliases: ["Realex"] },
+    { a: "TransferMate", tier: "deadly", aliases: [] },
+    { a: "Trinity Biotech", tier: "deadly", aliases: [] },
+    { a: "Mainstay Medical", tier: "deadly", aliases: [] },
+    { a: "Valeo Foods", tier: "deadly", aliases: [] },
+    { a: "Origin Enterprises", tier: "deadly", aliases: [] },
+    { a: "Keelings", tier: "deadly", aliases: [] },
+    { a: "Almac", tier: "deadly", aliases: [] },
+    { a: "Kainos", tier: "deadly", aliases: [] },
+    { a: "Wrightbus", tier: "deadly", aliases: [] },
+    { a: "Shorts", tier: "deadly", aliases: ["Short Brothers"] },
+    { a: "ESB International", tier: "deadly", aliases: [] },
+    { a: "Abbey Machinery", tier: "deadly", aliases: [] },
+    { a: "Keenan", tier: "deadly", aliases: [] },
+    { a: "Mergon", tier: "deadly", aliases: [] },
+    { a: "Movidius", tier: "craic", aliases: [] },
+    { a: "Decawave", tier: "craic", aliases: [] },
+    { a: "Prothena", tier: "craic", aliases: [] },
+  ] },
+  { id: "lcenglish", prompt: "Name a poet or text from the Leaving Cert English course (any year)", ignore: ["the"], answers: [
+    { a: "Seamus Heaney", tier: "sure", aliases: ["Heaney"] },
+    { a: "Patrick Kavanagh", tier: "sure", aliases: ["Kavanagh"] },
+    { a: "W.B. Yeats", tier: "sure", aliases: ["Yeats", "William Butler Yeats"] },
+    { a: "King Lear", tier: "sure", aliases: [] },
+    { a: "Sylvia Plath", tier: "notions", aliases: [] },
+    { a: "Hamlet", tier: "notions", aliases: [] },
+    { a: "Elizabeth Bishop", tier: "sound", aliases: [] },
+    { a: "Eavan Boland", tier: "sound", aliases: [] },
+    { a: "Robert Frost", tier: "sound", aliases: [] },
+    { a: "Gerard Manley Hopkins", tier: "sound", aliases: [] },
+    { a: "John Donne", tier: "sound", aliases: [] },
+    { a: "John Keats", tier: "sound", aliases: [] },
+    { a: "William Wordsworth", tier: "sound", aliases: [] },
+    { a: "T.S. Eliot", tier: "sound", aliases: [] },
+    { a: "Philip Larkin", tier: "sound", aliases: [] },
+    { a: "Emily Dickinson", tier: "sound", aliases: [] },
+    { a: "Macbeth", tier: "sound", aliases: [] },
+    { a: "Othello", tier: "sound", aliases: [] },
+    { a: "Wuthering Heights", tier: "sound", aliases: [] },
+    { a: "Pride and Prejudice", tier: "sound", aliases: [] },
+    { a: "Jane Eyre", tier: "sound", aliases: [] },
+    { a: "The Great Gatsby", tier: "sound", aliases: [] },
+    { a: "Never Let Me Go", tier: "sound", aliases: [] },
+    { a: "Frankenstein", tier: "sound", aliases: [] },
+    { a: "Brooklyn", tier: "sound", aliases: [] },
+    { a: "Philadelphia, Here I Come!", tier: "sound", aliases: ["Philadelphia Here I Come"] },
+    { a: "Dancing at Lughnasa", tier: "sound", aliases: [] },
+    { a: "Translations", tier: "sound", aliases: [] },
+    { a: "A Doll's House", tier: "sound", aliases: [] },
+    { a: "Death of a Salesman", tier: "sound", aliases: [] },
+    { a: "The Crucible", tier: "sound", aliases: [] },
+    { a: "1984", tier: "sound", aliases: ["Nineteen Eighty-Four"] },
+    { a: "The Handmaid's Tale", tier: "sound", aliases: [] },
+    { a: "The Kite Runner", tier: "sound", aliases: [] },
+    { a: "Foster", tier: "sound", aliases: [] },
+    { a: "Casablanca", tier: "sound", aliases: [] },
+    { a: "The Lake Isle of Innisfree", tier: "sound", aliases: [] },
+    { a: "Easter 1916", tier: "sound", aliases: [] },
+    { a: "The Road Not Taken", tier: "sound", aliases: [] },
+    { a: "Mirror", tier: "sound", aliases: [] },
+    { a: "Morning Song", tier: "sound", aliases: [] },
+    { a: "The Fish", tier: "sound", aliases: [] },
+    { a: "Child of Our Time", tier: "sound", aliases: [] },
+    { a: "Canal Bank Walk", tier: "sound", aliases: [] },
+    { a: "A Christmas Childhood", tier: "sound", aliases: [] },
+    { a: "Derek Mahon", tier: "savage", aliases: [] },
+    { a: "John Montague", tier: "savage", aliases: [] },
+    { a: "Adrienne Rich", tier: "savage", aliases: [] },
+    { a: "Paul Durcan", tier: "savage", aliases: [] },
+    { a: "Eiléan Ní Chuilleanáin", tier: "savage", aliases: [] },
+    { a: "Brendan Kennelly", tier: "savage", aliases: [] },
+    { a: "Thomas Kinsella", tier: "savage", aliases: [] },
+    { a: "Michael Longley", tier: "savage", aliases: [] },
+    { a: "The Tempest", tier: "savage", aliases: [] },
+    { a: "Emma", tier: "savage", aliases: [] },
+    { a: "Persuasion", tier: "savage", aliases: [] },
+    { a: "The Remains of the Day", tier: "savage", aliases: [] },
+    { a: "Purple Hibiscus", tier: "savage", aliases: [] },
+    { a: "The Spinning Heart", tier: "savage", aliases: [] },
+    { a: "Lies of Silence", tier: "savage", aliases: [] },
+    { a: "Big Maggie", tier: "savage", aliases: [] },
+    { a: "The Playboy of the Western World", tier: "savage", aliases: [] },
+    { a: "The Plough and the Stars", tier: "savage", aliases: [] },
+    { a: "Juno and the Paycock", tier: "savage", aliases: [] },
+    { a: "All My Sons", tier: "savage", aliases: [] },
+    { a: "Silas Marner", tier: "savage", aliases: [] },
+    { a: "The Old Man and the Sea", tier: "savage", aliases: [] },
+    { a: "Cinema Paradiso", tier: "savage", aliases: [] },
+    { a: "Witness", tier: "savage", aliases: [] },
+    { a: "The Shawshank Redemption", tier: "savage", aliases: [] },
+    { a: "September 1913", tier: "savage", aliases: [] },
+    { a: "The Wild Swans at Coole", tier: "savage", aliases: [] },
+    { a: "An Irish Airman Foresees His Death", tier: "savage", aliases: [] },
+    { a: "Sailing to Byzantium", tier: "savage", aliases: [] },
+    { a: "The Forge", tier: "savage", aliases: [] },
+    { a: "A Constable Calls", tier: "savage", aliases: [] },
+    { a: "The Underground", tier: "savage", aliases: [] },
+    { a: "Postscript", tier: "savage", aliases: [] },
+    { a: "The Skunk", tier: "savage", aliases: [] },
+    { a: "Shancoduff", tier: "savage", aliases: [] },
+    { a: "Inniskeen Road: July Evening", tier: "savage", aliases: [] },
+    { a: "Epic", tier: "savage", aliases: [] },
+    { a: "Advent", tier: "savage", aliases: [] },
+    { a: "The War Horse", tier: "savage", aliases: [] },
+    { a: "Poppies in July", tier: "savage", aliases: [] },
+    { a: "The Arrival of the Bee Box", tier: "savage", aliases: [] },
+    { a: "Black Rook in Rainy Weather", tier: "savage", aliases: [] },
+    { a: "Filling Station", tier: "savage", aliases: [] },
+    { a: "Sestina", tier: "savage", aliases: [] },
+    { a: "In the Waiting Room", tier: "savage", aliases: [] },
+    { a: "Out, Out—", tier: "savage", aliases: ["Out Out"] },
+    { a: "Mending Wall", tier: "savage", aliases: [] },
+    { a: "Birches", tier: "savage", aliases: [] },
+    { a: "Ode to a Nightingale", tier: "savage", aliases: [] },
+    { a: "La Belle Dame sans Merci", tier: "savage", aliases: [] },
+    { a: "Aunt Jennifer's Tigers", tier: "savage", aliases: [] },
+    { a: "The Love Song of J. Alfred Prufrock", tier: "savage", aliases: ["Prufrock"] },
+    { a: "The Windhover", tier: "savage", aliases: [] },
+    { a: "Pied Beauty", tier: "savage", aliases: [] },
+    { a: "God's Grandeur", tier: "savage", aliases: [] },
+    { a: "The Flea", tier: "savage", aliases: [] },
+    { a: "The Sunne Rising", tier: "savage", aliases: ["The Sun Rising"] },
+    { a: "Hope is the thing with feathers", tier: "savage", aliases: [] },
+    { a: "Mossbawn: Sunlight", tier: "deadly", aliases: ["Sunlight"] },
+    { a: "Bogland", tier: "deadly", aliases: [] },
+    { a: "The Great Hunger", tier: "deadly", aliases: [] },
+    { a: "Lines Written on a Seat on the Grand Canal", tier: "deadly", aliases: [] },
+    { a: "The Black Lace Fan My Mother Gave Me", tier: "deadly", aliases: [] },
+    { a: "Child", tier: "deadly", aliases: [] },
+    { a: "The Prodigal", tier: "deadly", aliases: [] },
+    { a: "First Death in Nova Scotia", tier: "deadly", aliases: [] },
+    { a: "Acquainted with the Night", tier: "deadly", aliases: [] },
+    { a: "Preludes", tier: "deadly", aliases: [] },
+    { a: "Inversnaid", tier: "deadly", aliases: [] },
+    { a: "Felix Randal", tier: "deadly", aliases: [] },
+    { a: "Spring", tier: "deadly", aliases: [] },
+    { a: "Batter My Heart", tier: "deadly", aliases: [] },
+    { a: "Song: Go and Catch a Falling Star", tier: "deadly", aliases: ["Go and Catch a Falling Star"] },
+    { a: "The Whitsun Weddings", tier: "deadly", aliases: [] },
+    { a: "Ambulances", tier: "deadly", aliases: [] },
+    { a: "An Arundel Tomb", tier: "deadly", aliases: [] },
+    { a: "Grandfather", tier: "deadly", aliases: [] },
+    { a: "Antarctica", tier: "deadly", aliases: [] },
+    { a: "Kinsale", tier: "deadly", aliases: [] },
+    { a: "After the Titanic", tier: "deadly", aliases: [] },
+    { a: "A Disused Shed in Co. Wexford", tier: "deadly", aliases: [] },
+    { a: "Killing the Pig", tier: "deadly", aliases: [] },
+    { a: "The Locket", tier: "deadly", aliases: [] },
+    { a: "Nessa", tier: "deadly", aliases: [] },
+    { a: "A narrow Fellow in the Grass", tier: "deadly", aliases: [] },
+    { a: "I heard a Fly buzz", tier: "deadly", aliases: [] },
+    { a: "Six Nuns Die in Convent Inferno", tier: "craic", aliases: [] },
+    { a: "Lucina Schynning in Silence of the Nicht", tier: "craic", aliases: [] },
+    { a: "Ode on a Grecian Urn", tier: "craic", aliases: [] },
+    { a: "Diving into the Wreck", tier: "craic", aliases: [] },
+    { a: "Wife Who Smashed Television Gets Jail", tier: "craic", aliases: [] },
+    { a: "Windharp", tier: "craic", aliases: [] },
+  ] },
+  // ---------- NUMBER questions (see the format notes above) ----------
+  { id: "eurowins", type: "number", prompt: "How many times has Ireland won Eurovision?", answer: 7, mode: "abs", bands: [0, 0, 1, 1, 2, 3] },
+  { id: "spire", type: "number", prompt: "How tall is the Spire on O'Connell Street, in metres?", answer: 120, unit: "m", mode: "pct" },
+  { id: "crokepark", type: "number", prompt: "What's the capacity of Croke Park?", answer: 82300, mode: "pct" },
+  { id: "aviva", type: "number", prompt: "What's the capacity of the Aviva Stadium?", answer: 51700, mode: "pct" },
+  { id: "moher", type: "number", prompt: "How high are the Cliffs of Moher at their highest point, in metres?", answer: 214, unit: "m", mode: "pct" },
+  { id: "croaghpatrick", type: "number", prompt: "How tall is Croagh Patrick, in metres?", answer: 764, unit: "m", mode: "pct" },
+  { id: "carrauntoohil", type: "number", prompt: "How tall is Carrauntoohil, in metres?", answer: 1038, unit: "m", mode: "pct" },
+  { id: "shannon", type: "number", prompt: "How long is the River Shannon, in km?", answer: 360, unit: "km", mode: "pct" },
+  { id: "poolbeg", type: "number", prompt: "How tall are the Poolbeg chimneys, in metres?", answer: 207, unit: "m", mode: "pct" },
+  { id: "census", type: "number", prompt: "What was the population of the Republic of Ireland in the 2022 census?", answer: 5149139, mode: "log" },
+  { id: "dubpop", type: "number", prompt: "What was the population of County Dublin in the 2022 census?", answer: 1458154, mode: "log" },
+  { id: "guinnesslease", type: "number", prompt: "How many years was the lease Arthur Guinness signed for St James's Gate?", answer: 9000, unit: "years", mode: "log" },
+  { id: "guinnessrent", type: "number", prompt: "How many pounds a year did that Guinness lease cost?", answer: 45, unit: "£", mode: "pct" },
+  { id: "newgrange", type: "number", prompt: "Roughly how many years old is Newgrange?", answer: 5200, unit: "years", mode: "pct" },
+  { id: "kells", type: "number", prompt: "How many pages are in the Book of Kells?", answer: 680, unit: "pages", mode: "pct" },
+  { id: "tds", type: "number", prompt: "How many TDs are there in the Dáil?", answer: 174, mode: "pct" },
+  { id: "tayto", type: "number", prompt: "In what year were Tayto cheese and onion crisps invented?", answer: 1954, mode: "abs", year: true },
+  { id: "penneys", type: "number", prompt: "In what year did the first Penneys open, on Mary Street?", answer: 1969, mode: "abs", year: true },
+  { id: "eec", type: "number", prompt: "In what year did Ireland join the EEC (now the EU)?", answer: 1973, mode: "abs", year: true },
+  { id: "hapenny", type: "number", prompt: "In what year did the Ha'penny Bridge open?", answer: 1816, mode: "abs", year: true },
+  { id: "fatherted", type: "number", prompt: "In what year did Father Ted first air?", answer: 1995, mode: "abs", year: true },
+  { id: "fatheredeps", type: "number", prompt: "How many episodes of Father Ted were made?", answer: 25, unit: "episodes", mode: "abs", bands: [0, 1, 2, 4, 6, 9] },
+  { id: "derrygirls", type: "number", prompt: "How many episodes of Derry Girls were made?", answer: 19, unit: "episodes", mode: "abs", bands: [0, 1, 2, 4, 6, 9] },
+  { id: "garth", type: "number", prompt: "How many tickets did Garth Brooks sell for his cancelled 2014 Croke Park gigs?", answer: 400000, mode: "log" },
+  { id: "popemass", type: "number", prompt: "Roughly how many people went to the Pope's 1979 Mass in the Phoenix Park?", answer: 1250000, mode: "log" },
+  { id: "spireyear", type: "number", prompt: "In what year was the Spire on O'Connell Street finished?", answer: 2003, mode: "abs", year: true },
+  { id: "luasyear", type: "number", prompt: "In what year did the Luas start running?", answer: 2004, mode: "abs", year: true },
+  { id: "dartyear", type: "number", prompt: "In what year did the DART start running?", answer: 1984, mode: "abs", year: true },
+  { id: "euroyear", type: "number", prompt: "In what year did euro notes and coins replace the punt?", answer: 2002, mode: "abs", year: true },
+  { id: "mcdonalds", type: "number", prompt: "In what year did Ireland's first McDonald's open, on Grafton Street?", answer: 1977, mode: "abs", year: true },
+  { id: "latelate", type: "number", prompt: "In what year did The Late Late Show first air?", answer: 1962, mode: "abs", year: true },
+  { id: "italia90", type: "number", prompt: "In what year did Ireland's men first play at a World Cup?", answer: 1990, mode: "abs", year: true },
+  { id: "grandslam48", type: "number", prompt: "In what year did Ireland win their first rugby Grand Slam?", answer: 1948, mode: "abs", year: true },
+  { id: "titanic", type: "number", prompt: "In what year did the Belfast-built Titanic sink?", answer: 1912, mode: "abs", year: true },
+  { id: "ulysses", type: "number", prompt: "In what year was James Joyce's Ulysses published?", answer: 1922, mode: "abs", year: true },
+  { id: "dracula", type: "number", prompt: "In what year was Bram Stoker's Dracula published?", answer: 1897, mode: "abs", year: true },
+  { id: "zombieyear", type: "number", prompt: "In what year did The Cranberries release 'Zombie'?", answer: 1994, mode: "abs", year: true },
+  { id: "nothingcompares", type: "number", prompt: "In what year did Sinéad O'Connor's 'Nothing Compares 2 U' come out?", answer: 1990, mode: "abs", year: true },
+  { id: "taytopark", type: "number", prompt: "In what year did Tayto Park (now Emerald Park) open?", answer: 2010, mode: "abs", year: true },
+  { id: "marriageref", type: "number", prompt: "In what year did Ireland vote Yes to marriage equality?", answer: 2015, mode: "abs", year: true },
+  { id: "onedyear", type: "number", prompt: "In what year was One Direction put together on The X Factor?", answer: 2010, mode: "abs", year: true },
+  { id: "riverdanceyear", type: "number", prompt: "In what year did Riverdance first appear, as the Eurovision interval act?", answer: 1994, mode: "abs", year: true },
+  { id: "paris24gold", type: "number", prompt: "How many gold medals did Ireland win at the Paris 2024 Olympics?", answer: 4, mode: "abs", bands: [0, 0, 1, 1, 2, 3] },
+  { id: "paris24medals", type: "number", prompt: "How many medals in total did Ireland win at the Paris 2024 Olympics?", answer: 7, mode: "abs", bands: [0, 0, 1, 2, 3, 4] },
+  { id: "normalpeople", type: "number", prompt: "How many episodes of Normal People were made?", answer: 12, unit: "episodes", mode: "abs", bands: [0, 1, 2, 3, 5, 7] },
+  { id: "famine1841", type: "number", prompt: "What was the population of the whole island of Ireland in the 1841 census, just before the Famine?", answer: 8175124, mode: "log" },
+  { id: "nipop", type: "number", prompt: "What was the population of Northern Ireland in the 2021 census?", answer: 1903175, mode: "log" },
+  { id: "irishspeakers", type: "number", prompt: "How many people said they could speak Irish in the 2022 census?", answer: 1873997, mode: "log" },
+  { id: "lugnaquilla", type: "number", prompt: "How tall is Lugnaquilla, the highest mountain in Wicklow, in metres?", answer: 925, unit: "m", mode: "pct" },
+  { id: "benbulben", type: "number", prompt: "How tall is Benbulben, in metres?", answer: 526, unit: "m", mode: "pct" },
+  { id: "wellington", type: "number", prompt: "How tall is the Wellington Monument in the Phoenix Park, in metres?", answer: 62, unit: "m", mode: "pct" },
+  { id: "phoenixpark", type: "number", prompt: "How big is the Phoenix Park, in acres?", answer: 1750, unit: "acres", mode: "pct" },
+  { id: "seanad", type: "number", prompt: "How many senators are there in the Seanad?", answer: 60, mode: "pct" },
+  { id: "collinsage", type: "number", prompt: "How old was Michael Collins when he died?", answer: 31, mode: "abs", bands: [0, 1, 2, 4, 6, 9] },
+  { id: "ronanage", type: "number", prompt: "How old was Saoirse Ronan when she got her first Oscar nomination?", answer: 13, mode: "abs", bands: [0, 0, 1, 2, 3, 5] },
 ];
 
 /* =====================================================================
@@ -13713,40 +14954,163 @@ function prettyDate(key) {
 function hashStr(str) { let h = 1779033703 ^ str.length; for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); } return () => { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return (h ^= h >>> 16) >>> 0; }; }
 function mulberry32(a) { return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function seededShuffle(arr, seed) { const r = mulberry32(hashStr(seed)()); const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-// Past days come straight from LOCKED_DIVES. After those, walk through the bank one seeded
-// shuffle ("cycle") at a time, 7 per day, so nothing repeats until every prompt has been used.
-// The first cycle skips whatever the most recent locked days already used.
-function promptIdsForDive(n) {
-  const K = PROMPTS_PER_DIVE, ids = PROMPTS.map((p) => p.id), have = new Set(ids), N = ids.length;
-  if (LOCKED_DIVES[n]) return LOCKED_DIVES[n].filter((id) => have.has(id));
+// Past days come straight from LOCKED_DIVES. After those, word prompts and number questions
+// each walk through their own pool one seeded shuffle ("cycle") at a time, so nothing in a pool
+// repeats until that whole pool has been used. A dive takes 7 in total: from NUMBERS_FROM_DIVE on,
+// 2 or 3 of them (seeded per day) are number questions, spread through the dive. Where a new cycle
+// starts, anything used in the last NO_REPEAT_DAYS days waits a while longer. The first word cycle
+// skips whatever the most recent locked days already used. Retired prompts are never scheduled.
+const isNumberQ = (p) => !!p && p.type === "number";
+const seededRand = (seed) => mulberry32(hashStr(seed)());
+function numberCountForDive(n, poolSize = Infinity) {
+  if (n < NUMBERS_FROM_DIVE || !poolSize) return 0;
+  const [lo, hi] = NUMBERS_PER_DIVE;
+  const c = lo + Math.floor(seededRand(`${SCHEDULE_SALT}:numcount:${n}`)() * (hi - lo + 1));
+  return Math.max(0, Math.min(c, poolSize, PROMPTS_PER_DIVE));
+}
+// Which of the 7 slots hold the number questions: seeded, and never two side by side.
+function numberSlotsForDive(n, c) {
+  const K = PROMPTS_PER_DIVE, combos = [];
+  const walk = (from, picked) => { if (picked.length === c) return void combos.push(picked); for (let i = from; i < K; i++) walk(i + 2, [...picked, i]); };
+  walk(0, []);
+  if (!combos.length) return Array.from({ length: c }, (_, i) => K - c + i);
+  return combos[Math.floor(seededRand(`${SCHEDULE_SALT}:slots:${n}`)() * combos.length)];
+}
+let schedCache = null;
+function buildSchedule(upTo) {
+  const K = PROMPTS_PER_DIVE;
   const L = Math.max(0, ...Object.keys(LOCKED_DIVES).map(Number));
-  const recent = new Set(), span = Math.max(1, Math.floor(N / K) - 1);
-  for (let d = L; d > Math.max(0, L - span); d--) (LOCKED_DIVES[d] || []).forEach((id) => recent.add(id));
+  const active = PROMPTS.filter((p) => !p.retired), have = new Set(active.map((p) => p.id));
+  const pools = { word: active.filter((p) => !isNumberQ(p)).map((p) => p.id), num: active.filter(isNumberQ).map((p) => p.id) };
+  const numCount = (d) => numberCountForDive(d, pools.num.length);
+  const count = { num: numCount, word: (d) => K - numCount(d) };
   const pins = Object.entries(PINNED_DIVES).map(([date, list]) => [dayIndex(date) - dayIndex(LAUNCH_DATE) + 1, list.filter((id) => have.has(id))]).filter(([d]) => d > L);
-  const start = (n - L - 1) * K;
-  const end = Math.max(start + K, ...pins.map(([d]) => (d - L) * K)) + N;
-  let seq = [], c = 0; const cycStarts = [];
-  while (seq.length < end) {
-    const perm = seededShuffle(c === 0 ? ids.filter((id) => !recent.has(id)) : ids, `${SCHEDULE_SALT}:${N}:${L}:${c}`);
-    const off = seq.length % K;
-    if (off) { // a day straddles two cycles: never show the same prompt twice in one dive
-      const today = new Set(seq.slice(seq.length - off));
-      for (let i = 0; i < K - off; i++) if (today.has(perm[i]))
-        for (let j = K - off; j < perm.length; j++) if (!today.has(perm[j])) { [perm[i], perm[j]] = [perm[j], perm[i]]; break; }
+  const lastDay = Math.max(upTo, ...pins.map(([d]) => d));
+  // when each prompt was last used on a locked day
+  const history = new Map();
+  for (let d = 1; d <= L; d++) (LOCKED_DIVES[d] || []).forEach((id) => history.set(id, d));
+  const out = {};
+  for (const kind of ["word", "num"]) {
+    const pool = pools[kind], N = pool.length, perDay = count[kind];
+    const start = {}; let acc = 0; // offset of each day in this pool = running total of earlier days' counts
+    for (let d = L + 1; d <= lastDay + 1; d++) { start[d] = acc; acc += perDay(d); }
+    const need = acc; // positions needed up to the end of lastDay
+    const seq = [], dayOf = [], cycStarts = [];
+    let nextDay = L + 1;
+    const dayAt = (pos) => { while (dayOf.length <= pos) { const c = perDay(nextDay); for (let i = 0; i < c; i++) dayOf.push(nextDay); nextDay++; } return dayOf[pos]; };
+    const span = Math.max(1, Math.floor(N / K) - 1), recent = new Set();
+    for (let d = L; d > Math.max(0, L - span); d--) (LOCKED_DIVES[d] || []).forEach((id) => recent.add(id));
+    const last = new Map(history);
+    for (let c = 0; N && seq.length < need + N; c++) {
+      const rest = seededShuffle(c === 0 ? pool.filter((id) => !recent.has(id)) : pool, `${SCHEDULE_SALT}:${kind}:${N}:${L}:${c}`);
+      cycStarts.push(seq.length);
+      while (rest.length) { // take the next prompt in the shuffle that hasn't been used too recently
+        const day = dayAt(seq.length), ago = (id) => day - (last.has(id) ? last.get(id) : -1e9);
+        let k = rest.findIndex((id) => ago(id) > NO_REPEAT_DAYS);
+        if (k < 0) k = rest.findIndex((id) => ago(id) > 0); // tiny pool: at least never twice in one dive
+        if (k < 0) k = 0;
+        const id = rest.splice(k, 1)[0]; seq.push(id); last.set(id, day);
+      }
     }
-    cycStarts.push(seq.length); seq = seq.concat(perm); c++;
+    for (const [d, list] of pins) { // move each pinned prompt into its day, swapping with that day's last free slot
+      const a = start[d], b = a + perDay(d), mine = list.filter((id) => pool.includes(id)).slice(0, b - a);
+      if (b <= a) continue;
+      const cyc = Math.max(...cycStarts.filter((x) => x <= a));
+      mine.forEach((id, k) => {
+        if (seq.slice(a, b).includes(id)) return;
+        let j = seq.indexOf(id, cyc); if (j < 0) j = seq.indexOf(id);
+        const t = b - 1 - k; [seq[t], seq[j]] = [seq[j], seq[t]];
+      });
+    }
+    out[kind] = { seq, start, perDay };
   }
-  for (const [d, list] of pins) { // move each pinned prompt into its day, swapping with that day's last free slot
-    const a = (d - L - 1) * K, b = a + K, cyc = Math.max(...cycStarts.filter((x) => x <= a));
-    list.forEach((id, k) => {
-      if (seq.slice(a, b).includes(id)) return;
-      let j = seq.indexOf(id, cyc); if (j < 0) j = seq.indexOf(id);
-      const t = b - 1 - k; [seq[t], seq[j]] = [seq[j], seq[t]];
-    });
+  const days = {};
+  for (let d = L + 1; d <= lastDay; d++) {
+    const w = out.word.seq.slice(out.word.start[d], out.word.start[d] + out.word.perDay(d));
+    const nq = out.num.seq.slice(out.num.start[d], out.num.start[d] + out.num.perDay(d));
+    const slots = new Set(numberSlotsForDive(d, nq.length)), ids = [];
+    for (let i = 0, wi = 0, ni = 0; i < w.length + nq.length; i++) ids.push(slots.has(i) ? nq[ni++] : w[wi++]);
+    days[d] = ids;
   }
-  return seq.slice(start, start + K);
+  return { upTo: lastDay, days };
+}
+function promptIdsForDive(n) {
+  if (LOCKED_DIVES[n]) return LOCKED_DIVES[n].filter((id) => promptById(id)); // retired prompts still count here
+  if (!schedCache || n > schedCache.upTo) schedCache = buildSchedule(Math.max(n, schedCache ? schedCache.upTo * 2 : 0, 400));
+  return (schedCache.days[n] || []).slice();
 }
 const promptById = (id) => PROMPTS.find((p) => p.id === id);
+
+/* ---------- Number questions ---------- */
+const numberBandsFor = (p) => p.bands || NUMBER_BANDS[p.mode || "pct"];
+// "82,300", "82300", "82k", "1.2m", "1.2 million", " 1038 ", "£45", "about 5,000 years" → a number (NaN if it isn't one).
+// A trailing "m" means metres when the question is in metres, and million otherwise.
+function parseNumberGuess(input, p = {}) {
+  let s = String(input == null ? "" : input).toLowerCase().trim();
+  s = s.replace(/^(about|around|roughly|approx(imately)?|nearly|almost|over|under|maybe|c\.?|ca\.?|~|≈)\s*/, "");
+  s = s.replace(/[£€$]/g, "").replace(/(\d)\s+(?=\d{3}(\D|$))/g, "$1").trim(); // "82 300" → "82300"
+  const unit = String(p.unit || "").toLowerCase().trim();
+  const unitWords = ["metres", "meters", "metre", "meter", "kilometres", "kilometers", "km", "kms", "years", "year", "yrs", "pages", "acres", "people", "tickets", "episodes", "pounds", "quid", "euro", "times", "tds", "seats", "ad"];
+  if (unit && unit !== "m") unitWords.unshift(unit);
+  let mult = 1;
+  for (let again = true; again; ) { again = false; // peel off units and multipliers from the end
+    for (const w of unitWords) if (s.endsWith(w) && /[\d.\s]$/.test(s.slice(0, -w.length) || "x") && s.length > w.length) { s = s.slice(0, -w.length).trim(); again = true; break; }
+    const m = s.match(/^(.*?[\d.])\s*(k|thousand|grand|m|mil|mill|million|millions|bn|billion)$/);
+    if (m && mult === 1) {
+      if (m[2] === "m" && unit === "m") { s = m[1]; again = true; continue; }
+      mult = { k: 1e3, thousand: 1e3, grand: 1e3, bn: 1e9, billion: 1e9 }[m[2]] || 1e6; s = m[1].trim(); again = true;
+    }
+  }
+  if (/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)) s = s.replace(/,/g, "");  // thousands commas
+  else if (/^\d+,\d{1,2}$/.test(s)) s = s.replace(",", ".");          // "1,2" as a decimal
+  s = s.replace(/\s+/g, "");
+  if (!/^\d*\.?\d+$|^\d+\.$/.test(s)) return NaN;
+  const v = parseFloat(s) * mult;
+  return Number.isFinite(v) ? Math.round(v * 1e6) / 1e6 : NaN;
+}
+// How far off a guess was, and the tier it earns (null = a miss).
+function scoreNumber(p, guess) {
+  const mode = p.mode || "pct", a = p.answer, bands = numberBandsFor(p);
+  if (!Number.isFinite(guess)) return { tier: null, off: Infinity, mode };
+  let off;
+  if (mode === "abs") off = Math.abs(guess - a);
+  else if (mode === "log") off = guess > 0 ? Math.abs(Math.log10(guess) - Math.log10(a)) : Infinity;
+  else off = Math.abs(guess - a) / Math.abs(a);
+  const tiers = [...TIER_ORDER].reverse(); // craic … sure
+  let tier = null;
+  if (guess === a) tier = "craic";
+  else for (let i = 0; i < tiers.length; i++) if (off <= bands[i] + 1e-9) { tier = tiers[i]; break; }
+  return { tier, off, mode };
+}
+function fmtNumber(v, p = {}) {
+  if (!Number.isFinite(v)) return "?";
+  const n = p.year ? String(Math.round(v)) : v.toLocaleString("en-IE", { maximumFractionDigits: Math.abs(v) < 10 ? 2 : Math.abs(v) < 1000 ? 1 : 0 });
+  const u = p.unit || "";
+  return !u ? n : /^[£€$]$/.test(u) ? u + n : `${n} ${u}`;
+}
+// "you were 4% off" / "spot on!" / "3 years out"
+function numberOffText(p, guess) {
+  if (!Number.isFinite(guess)) return "";
+  if (guess === p.answer) return "spot on!";
+  const d = Math.abs(guess - p.answer);
+  if ((p.mode || "pct") === "abs") return `you were ${fmtNumber(d, { year: p.year })} ${p.year ? (d === 1 ? "year" : "years") : ""} out`.replace(/\s+out/, " out");
+  const ratio = guess / p.answer;
+  if (ratio >= 2) return `you were about ${ratio < 10 ? ratio.toFixed(1).replace(/\.0$/, "") : Math.round(ratio).toLocaleString("en-IE")}× too high`;
+  if (ratio > 0 && ratio <= 0.5) return `you were about ${(1 / ratio) < 10 ? (1 / ratio).toFixed(1).replace(/\.0$/, "") : Math.round(1 / ratio).toLocaleString("en-IE")}× too low`;
+  const pct = (d / Math.abs(p.answer)) * 100;
+  return `you were ${pct < 1 ? pct.toFixed(1).replace(/\.0$/, "") : Math.round(pct)}% ${guess > p.answer ? "over" : "under"}`;
+}
+// The range that would have scored One in a Craicillion, e.g. "1,028–1,048 m".
+function craicRange(p) {
+  const b = numberBandsFor(p)[0], a = p.answer, mode = p.mode || "pct";
+  if (b === 0) return `exactly ${fmtNumber(a, p)}`;
+  let lo, hi;
+  if (mode === "abs") { lo = a - b; hi = a + b; }
+  else if (mode === "log") { lo = a / Math.pow(10, b); hi = a * Math.pow(10, b); }
+  else { lo = a * (1 - b); hi = a * (1 + b); }
+  const r = (x) => (Math.abs(a) >= 100 && !p.year ? Math.round(x) : Math.round(x * 100) / 100);
+  return `${fmtNumber(r(lo), { ...p, unit: "" })}–${fmtNumber(r(hi), p)}`;
+}
 
 /* ---------- Answer matching ---------- */
 function norm(s) {
@@ -14197,7 +15561,7 @@ function updateCountdowns() {
   const cd = fmtCountdown(msToMidnight());
   const foot = $("#home-foot");
   if (daily && daily.done) foot.innerHTML = `Next dive in <span class="countdown">${cd}</span>`;
-  else foot.textContent = `${PROMPTS.length} prompts in the bank · a new dive every midnight`;
+  else foot.textContent = `${PROMPTS.filter((p) => !p.retired).length} prompts in the bank · a new dive every midnight`;
   const rn = $("#res-next");
   if (rn) rn.innerHTML = mode === "daily" ? `Next dive in <span class="countdown">${cd}</span>`
     : mode === "archive" ? (arch && arch.onTheDay ? `Played on the day · ${prettyDate(arch.date)}` : `Archive dive from ${arch ? prettyDate(arch.date) : ""}. It doesn't count towards your streak.`)
@@ -14213,7 +15577,7 @@ function startDaily() {
 }
 function startFree() {
   mode = "free"; track("infinite-start");
-  const order = PROMPTS.map((p) => p.id).sort(() => Math.random() - 0.5);
+  const order = PROMPTS.filter((p) => !p.retired).map((p) => p.id).sort(() => Math.random() - 0.5);
   free = { ids: order, idx: 0, results: [], used: [], round: 1, total: 0 };
   enterGame();
 }
@@ -14256,7 +15620,10 @@ function nextPrompt() {
   $("#kicker").textContent = mode === "free" ? `Infinite · round ${g.round} · ${g.results.length + 1} of ${PROMPTS_PER_DIVE}` : `Prompt ${g.idx + 1} of ${PROMPTS_PER_DIVE}`;
   card.style.removeProperty("--tc");
   $("#fb").innerHTML = ""; tries = []; hint("");
-  const input = $("#answer"); input.value = ""; input.placeholder = "Type your answer…";
+  const input = $("#answer"), isNum = isNumberQ(p); input.value = "";
+  input.inputMode = isNum ? "decimal" : "text"; input.setAttribute("autocapitalize", isNum ? "off" : "words");
+  input.placeholder = isNum ? `Your guess${p.unit && !/^[£€$]$/.test(p.unit) ? ` (${p.year ? "year" : p.unit})` : p.year ? " (year)" : ""}…` : "Type your answer…";
+  $("#prompt-sub").textContent = isNum ? "One guess. The closer, the deeper." : "One answer. The rarer, the deeper.";
   $("#go").textContent = "Dive";
   renderPips();
   input.focus({ preventScroll: true });
@@ -14289,6 +15656,11 @@ function onSubmit(e) {
     pending = null;
   }
   if (!norm(v)) { const i = $("#answer"); i.classList.remove("shake"); void i.offsetWidth; i.classList.add("shake"); return; }
+  const p = currentPrompt();
+  if (isNumberQ(p) && !Number.isFinite(parseNumberGuess(v, p))) { // not a number: say so, the air keeps draining
+    const i = $("#answer"); i.classList.remove("shake"); void i.offsetWidth; i.classList.add("shake");
+    return hint(`“${esc(v.trim())}” isn't a number. Try something like <b>1038</b>, <b>82k</b> or <b>1.2m</b>.`);
+  }
   resolve(v, false);
 }
 let tries = []; // wrong guesses on the current prompt
@@ -14307,7 +15679,10 @@ function resolve(input, timedOut, confirmed = false) {
   if (timedOut && pending) { input = pending.input; timedOut = false; confirmed = true; } // out of air mid-question: take the suggestion
   pending = null;
   let res = { id: p.id, input: input || tries[tries.length - 1] || "", a: null, tier: null, pts: 0, status: "timeout", tries: tries.slice() };
-  if (!timedOut) {
+  if (isNumberQ(p)) { // one guess, scored by how close it is; further off than "sure" is a miss
+    if (!timedOut) { const guess = parseNumberGuess(input, p), sc = scoreNumber(p, guess);
+      res = { ...res, input, guess, tier: sc.tier, pts: sc.tier ? TIERS[sc.tier].pts : 0, status: sc.tier ? "ok" : "far" }; }
+  } else if (!timedOut) {
     const m = matchAnswer(p, input);
     let used = false, ans;
     if (m) { ans = p.answers[m.i];
@@ -14422,6 +15797,22 @@ function fillFeedback(p, r) {
   const t = r.tier ? TIERS[r.tier] : null;
   const g = cur(), total = totalPts(g) * 10;
   let top, copy, said = "";
+  if (isNumberQ(p)) {
+    if (r.status === "ok") {
+      top = `<span class="badge ${r.tier} pop">${icon(r.tier)} ${esc(t.name)}</span><span class="fb-pts pop">+${t.pts}</span>`;
+      copy = `<span class="ga-line">${esc(t.ga)}</span> <span class="muted">· ${esc(t.en)}</span>`;
+    } else {
+      top = `<span class="badge miss pop">${icon("miss")} ${r.status === "far" ? "Not close enough" : "Out of air"}</span><span class="fb-pts pop">+0</span>`;
+      copy = `<span class="ga-line">Mo léan…</span> <span class="muted">· ${r.status === "far" ? "Not close enough this time." : "Out of air, back up you go."}</span>`;
+    }
+    said = (Number.isFinite(r.guess) ? `You said <b>${esc(fmtNumber(r.guess, p))}</b><br>` : "") +
+      `Answer: <b>${esc(fmtNumber(p.answer, p))}</b>${Number.isFinite(r.guess) ? ` · ${esc(numberOffText(p, r.guess))}` : ""}`;
+    fb.innerHTML = `<div class="fb-q">${esc(p.prompt)}</div><div class="fb-top">${top}</div><div class="fb-copy">${copy}</div>
+      <div class="fb-said">${said}</div>
+      <div class="fb-picks"><span class="muted">One in a Craicillion needed:</span> <b>${esc(craicRange(p))}</b></div>`;
+    card.style.setProperty("--tc", `var(--t-${r.tier || "miss"})`);
+    return;
+  }
   if (r.status === "ok") {
     top = `<span class="badge ${r.tier} pop">${icon(r.tier)} ${esc(t.name)}</span><span class="fb-pts pop">+${t.pts}</span>`;
     copy = `<span class="ga-line">${esc(t.ga)}</span> <span class="muted">· ${esc(t.en)}</span>`;
@@ -14526,12 +15917,14 @@ function renderResults() {
   $("#res-squares").innerHTML = g.results.map((r) => tile(r.tier)).join("");
   $("#res-curve").innerHTML = g.results.length === PROMPTS_PER_DIVE ? curveHTML(pts) : "";
   $("#res-list").innerHTML = g.results.map((r) => {
-    const p = promptById(r.id); const t = r.tier ? TIERS[r.tier] : null;
-    const ans = r.status === "ok" ? `<span class="res-a">${esc(r.a || "—")}</span>`
+    const p = promptById(r.id); const t = r.tier ? TIERS[r.tier] : null, isNum = isNumberQ(p);
+    const hasGuess = isNum && Number.isFinite(r.guess);
+    const ans = isNum ? `<span class="res-a${hasGuess ? "" : " miss"}">${hasGuess ? esc(fmtNumber(r.guess, p)) : "Out of air"}<span class="res-num">Answer: ${esc(fmtNumber(p.answer, p))}${hasGuess ? ` · ${esc(numberOffText(p, r.guess))}` : ""}</span></span>`
+      : r.status === "ok" ? `<span class="res-a">${esc(r.a || "—")}</span>`
       : `<span class="res-a miss">Out of air${r.tries && r.tries.length ? ` · tried ${r.tries.map(esc).join(", ")}` : ""}</span>`;
     return `<li><span class="res-q">${esc(p ? p.prompt : r.id)}</span>${ans}<span class="res-right">${t ? `<span class="badge ${r.tier}">${icon(r.tier)} ${esc(t.name)}</span>` : `<span class="badge miss">${icon("miss")} Miss</span>`}<b>${r.pts}</b></span>
-      ${p && r.tries && r.tries.length ? `<a class="res-report" href="${esc(mailto(`Missing answer: ${p.prompt}`, `Hi Séamus,\n\nI think one of these should count for "${p.prompt}":\n${r.tries.map((t) => "- " + t).join("\n")}\n\n`))}">Should one of your guesses have counted? Tell Séamus</a>` : ""}
-      ${p ? `<details class="all" data-id="${esc(p.id)}" data-mine="${esc(r.a || "")}"><summary>See all ${p.answers.length} answers</summary><div class="all-body"></div></details>` : ""}</li>`;
+      ${p && !isNum && r.tries && r.tries.length ? `<a class="res-report" href="${esc(mailto(`Missing answer: ${p.prompt}`, `Hi Séamus,\n\nI think one of these should count for "${p.prompt}":\n${r.tries.map((t) => "- " + t).join("\n")}\n\n`))}">Should one of your guesses have counted? Tell Séamus</a>` : ""}
+      ${p && !isNum ? `<details class="all" data-id="${esc(p.id)}" data-mine="${esc(r.a || "")}"><summary>See all ${p.answers.length} answers</summary><div class="all-body"></div></details>` : ""}</li>`;
   }).join("");
   const rl = $("#res-list"); rl.classList.toggle("stagger", !reduceMotion); rl.querySelectorAll("li").forEach((li2, k) => (li2.style.animationDelay = (0.5 + k * 0.07) + "s"));
   $("#res-list").querySelectorAll("details.all").forEach((d) => d.addEventListener("toggle", () => { if (d.open) fillAllAnswers(d); }));
@@ -14629,7 +16022,7 @@ const RR_PRAISE = [["Maith thú!", "Well done"], ["Go hiontach!", "Brilliant"], 
 let rr = null;
 function rarerPool() {
   const today = diveNumber(todayKey()), from = new Map();
-  for (let n = 1; n < today; n++) for (const id of promptIdsForDive(n)) if (!from.has(id) && promptById(id)) from.set(id, n);
+  for (let n = 1; n < today; n++) for (const id of promptIdsForDive(n)) if (!from.has(id) && promptById(id) && !isNumberQ(promptById(id))) from.set(id, n);
   return [...from].map(([id, n]) => ({ p: promptById(id), dive: n }));
 }
 function rarerBest() { return store.get(K_RARER, { best: 0 }).best || 0; }
@@ -15051,7 +16444,7 @@ function miniReveal() {
 }
 
 /* ---------- Stats ---------- */
-const slimResults = (rs) => rs.map((r) => ({ id: r.id, a: r.a, tier: r.tier, pts: r.pts, status: r.status, input: r.input, tries: r.tries || [] }));
+const slimResults = (rs) => rs.map((r) => ({ id: r.id, a: r.a, tier: r.tier, pts: r.pts, status: r.status, input: r.input, tries: r.tries || [], ...(Number.isFinite(r.guess) ? { guess: r.guess } : {}) }));
 function recordArchive() {
   const a = store.get(K_ARCH, {});
   a[arch.date] = { dive: arch.dive, points: totalPts(arch), tiers: arch.results.map((r) => r.tier || "miss"), results: slimResults(arch.results) };
@@ -15236,7 +16629,7 @@ function init() {
   if (!store.get("craicillion:seen-howto", false)) { store.set("craicillion:seen-howto", true); setTimeout(() => openModal("howto"), 350); }
   renderHome();
 }
-window.__craicillion = { MINIS, miniState: () => mini, RF_REAL, RF_FAKE, rfCur: () => rf && rf.cur, phase: () => phase, rarerPool, percentileFor, norm, matchAnswer, promptIdsForDive, diveNumber, todayKey, dateForDive, PROMPTS, TIERS, shareText: () => shareText() };
+window.__craicillion = { MINIS, miniState: () => mini, RF_REAL, RF_FAKE, rfCur: () => rf && rf.cur, phase: () => phase, rarerPool, percentileFor, norm, matchAnswer, promptIdsForDive, diveNumber, todayKey, dateForDive, PROMPTS, TIERS, parseNumberGuess, scoreNumber, shareText: () => shareText() };
 init();
 </script>
 </body>
